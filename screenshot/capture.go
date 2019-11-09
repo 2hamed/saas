@@ -2,7 +2,7 @@ package screenshot
 
 // Capture is the interface to capture the screenshot
 type Capture interface {
-	Save(url string) (path string, err error)
+	Save(url string, destination string) error
 }
 
 // NewCapture returns a concrete implementaion of the Capture interface
@@ -13,7 +13,7 @@ func NewCapture() Capture {
 type phantomJs struct {
 }
 
-func (p phantomJs) Save(url string) (path string, err error) {
+func (p phantomJs) Save(url string, destination string) error {
 	// os.Exec("")
-	return "", nil
+	return nil
 }

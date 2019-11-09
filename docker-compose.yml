@@ -1,0 +1,10 @@
+version: "3"
+services:
+  sccapture:
+    build: ./
+
+  queue:
+    image: rabbitmq:3-management
+
+  db:
+    image: postgres:11
