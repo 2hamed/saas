@@ -18,7 +18,7 @@ var (
 	rabbitMQPass = os.Getenv("RABBITMQ_PASS")
 )
 
-func createRabbitMQ(webCapture WebCapture) (*rabbitMQManager, error) {
+func createRabbitMQ(wc webCapture, jc jobCallback) (*rabbitMQManager, error) {
 	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%s/", rabbitMQUser, rabbitMQPass, rabbitMQHost, rabbitMQPort))
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func createRabbitMQ(webCapture WebCapture) (*rabbitMQManager, error) {
 	// declaring job queue
 	pubChan.QueueDeclare(qName, true, false, true, true, nil)
 
-	return &rabbitMQManager{conn, pubChan, consumerChan, webCapture}, nil
+	return &rabbitMQManager{conn, pubChan, consumerChan, wc, jc}, nil
 }
 
 type rabbitMQManager struct {
@@ -48,7 +48,8 @@ type rabbitMQManager struct {
 	pubChan      *amqp.Channel
 	consumerChan *amqp.Channel
 
-	webCapture WebCapture
+	wc webCapture
+	jc jobCallback
 }
 
 func (m *rabbitMQManager) Enqueue(url string) error {
@@ -64,17 +65,23 @@ func (m *rabbitMQManager) startConsumer() {
 		panic(err)
 	}
 
-	go func(ch <-chan amqp.Delivery) {
+	go func() {
 		for {
-			d := <-ch
-
-			err := m.webCapture.Save(string(d.Body), "")
-			if err != nil {
-				// retry this or push to a failed jobs queue
-				d.Nack(false, false)
-			} else {
-				d.Ack(false)
-			}
+			m.processJob(<-consumChan)
 		}
-	}(consumChan)
+	}()
+}
+func (m *rabbitMQManager) processJob(d amqp.Delivery) {
+
+	url := string(d.Body)
+	err := m.wc.Save(url, "")
+	if err != nil {
+		// TODO: retry this or push to a failed jobs queue
+		m.jc.JobFailed(url)
+		d.Nack(false, false)
+	} else {
+		m.jc.JobFinished(url)
+		d.Ack(false)
+	}
+
 }

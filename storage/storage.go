@@ -5,5 +5,7 @@ type DataFetcher interface {
 }
 
 type DataStore interface {
-	Store(url string, path string) error
+	Store(url string, destination string) error
+	UpdateStatus(url string, finished bool) error
+	SetFailed(url string) error
 }

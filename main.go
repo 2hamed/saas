@@ -20,7 +20,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	_, err = jobq.NewQManager(capture)
+	_, err = jobq.NewQManager(capture, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
