@@ -2,11 +2,11 @@ package api
 
 import "net/http"
 
-func Handle(qm QManager) func(w http.ResponseWriter, r *http.Request) {
+func Handle(c coordinator) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// receive urls from request
 
-		if err := qm.Enqueue(""); err != nil {
+		if err := c.CaptureAsync(""); err != nil {
 			// return error to user
 			return
 		}
