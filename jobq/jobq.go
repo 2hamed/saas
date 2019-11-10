@@ -4,6 +4,6 @@ type QManager interface {
 	Enqueue(url string) error
 }
 
-func NewQManager() QManager {
-	return &rabbitMQManager{}
+func NewQManager(webCapture WebCapture) (QManager, error) {
+	return createRabbitMQ(webCapture)
 }
