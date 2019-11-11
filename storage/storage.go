@@ -27,7 +27,7 @@ func NewDataStore() (DataStore, error) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s", mongoHost, mongoPort)))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed connecting to Mongo: %v", err)
 	}
 	return &mongoDataStore{
 		client: client,
@@ -77,7 +77,9 @@ func (s *mongoDataStore) UpdateStatus(url string, finished bool) error {
 			"url": url,
 		},
 		bson.M{
-			"status": status,
+			"$set": bson.M{
+				"status": status,
+			},
 		})
 
 	return err

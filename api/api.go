@@ -1,16 +1,16 @@
 package api
 
-import "net/http"
+import (
+	"net/http"
 
-func Handle(c coordinator) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// receive urls from request
+	"github.com/gorilla/mux"
+)
 
-		if err := c.CaptureAsync(""); err != nil {
-			// return error to user
-			return
-		}
+func StartServer(d dispatcher) error {
+	router := mux.NewRouter()
 
-		// return success to user
-	}
+	router.HandleFunc("/new", NewJobHandler(d)).Methods("POST")
+	router.HandleFunc("/result/{hash}", GetResultHandler(d)).Methods("GET")
+
+	return http.ListenAndServe(":8080", router)
 }

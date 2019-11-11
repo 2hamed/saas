@@ -1,8 +1,10 @@
 package screenshot
 
 import (
-	"log"
 	"os"
+
+	log "github.com/sirupsen/logrus"
+
 	"os/exec"
 )
 
@@ -16,20 +18,21 @@ func NewCapture() (Capture, error) {
 	return phantomJs{}, nil
 }
 
-var (
-	phantomJsPath = os.Getenv("PHANTOMJS_PATH")
-	captureJsPath = os.Getenv("CAPTUREJS_PATH")
-)
-
 type phantomJs struct {
 }
 
 func (p phantomJs) Save(url string, destination string) error {
-	cmd := exec.Command(phantomJsPath, captureJsPath, url, destination)
+	log.Debug("capture initiated for", url)
+
+	cmd := exec.Command(os.Getenv("PHANTOMJS_PATH"), os.Getenv("CAPTUREJS_PATH"), url, destination)
+
+	log.Debug("executing", cmd.String())
+
 	output, err := cmd.Output()
 
 	if err != nil {
-		log.Println(string(output))
+		log.Error("failed capturing screenshot", string(output))
 	}
+
 	return err
 }

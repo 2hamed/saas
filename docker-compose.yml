@@ -1,10 +1,15 @@
 version: "3"
 services:
-  sccapture:
-    build: ./
+  # capture:
+  #   build: ./
 
   queue:
     image: rabbitmq:3-management
+    ports:
+      - 5672:5672
+      - 15672:15672
 
   db:
-    image: postgres:11
+    image: mongo
+    ports:
+      - 27017:27017

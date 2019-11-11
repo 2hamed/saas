@@ -1,5 +1,7 @@
 package api
 
-type coordinator interface {
-	CaptureAsync(url string) error
+type dispatcher interface {
+	Enqueue(url string) error
+
+	GetResult(url string) (string, error)
 }
