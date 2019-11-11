@@ -47,43 +47,38 @@ func (d *dispatcher) Enqueue(url string) error {
 }
 
 func (d *dispatcher) GetResult(url string) (string, error) {
-
+	//TODO : get path from dataStore
 	return "", nil
 }
 
 func (d *dispatcher) listenForResults() {
-	go func() {
-		for {
-			result := <-d.q.FinishChan()
-
-			log.Debug("Received finish signal for", result)
-
-			err := d.ds.UpdateStatus(result[0], true)
-
-			if err != nil {
-				log.Error("failed to update status for", result, err)
-			}
-		}
-	}()
 
 	go func() {
 		for {
-			result := <-d.q.FailChan()
+			select {
+			case r := <-d.q.FinishChan():
+				log.Debug("Received finish signal for", r)
 
-			log.Debug("Received fail signal for ", result)
+				err := d.ds.SetFinished(r[0])
 
-			err := d.ds.SetFailed(result[0])
+				if err != nil {
+					log.Error("failed to update status for", r, err)
+				}
+			case r := <-d.q.FailChan():
+				log.Debug("Received fail signal for ", r)
 
-			if err != nil {
-				log.Error("failed to set failed for", result, err)
+				err := d.ds.SetFailed(r[0])
+
+				if err != nil {
+					log.Error("failed to set failed for", r, err)
+				}
 			}
-
 		}
 	}()
 }
 
 func getSha1(url string) string {
 	hash := sha1.New()
-	hash.Write([]byte(url))
+	_, _ = hash.Write([]byte(url))
 	return fmt.Sprintf("%x", hash.Sum(nil))
 }

@@ -14,7 +14,7 @@ import (
 type DataStore interface {
 	Fetch(url string) (string, error)
 	Store(url string, destination string) error
-	UpdateStatus(url string, finished bool) error
+	SetFinished(url string) error
 	SetFailed(url string) error
 }
 
@@ -24,7 +24,7 @@ var (
 )
 
 func NewDataStore() (DataStore, error) {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s", mongoHost, mongoPort)))
 	if err != nil {
 		return nil, fmt.Errorf("failed connecting to Mongo: %v", err)
@@ -44,9 +44,11 @@ type mongoDataStore struct {
 }
 
 func (s *mongoDataStore) Fetch(url string) (string, error) {
-	res := s.client.Database(databaseName).Collection(collectionName).FindOne(context.Background(), bson.M{
-		"url": url,
-	})
+	res := s.client.Database(databaseName).
+		Collection(collectionName).
+		FindOne(context.Background(), bson.M{
+			"url": url,
+		})
 
 	var m bson.M
 	err := res.Decode(&m)
@@ -67,18 +69,15 @@ func (s *mongoDataStore) Store(url string, destination string) error {
 	return err
 }
 
-func (s *mongoDataStore) UpdateStatus(url string, finished bool) error {
-	status := "finished"
-	if !finished {
-		status = "pending"
-	}
+func (s *mongoDataStore) SetFinished(url string) error {
+
 	_, err := s.client.Database(databaseName).Collection(collectionName).UpdateOne(context.Background(),
 		bson.M{
 			"url": url,
 		},
 		bson.M{
 			"$set": bson.M{
-				"status": status,
+				"status": "finished",
 			},
 		})
 
@@ -91,7 +90,9 @@ func (s *mongoDataStore) SetFailed(url string) error {
 			"url": url,
 		},
 		bson.M{
-			"status": "failed",
+			"$set": bson.M{
+				"status": "failed",
+			},
 		})
 	return err
 }

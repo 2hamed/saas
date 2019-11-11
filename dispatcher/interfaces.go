@@ -4,7 +4,7 @@ type dataStore interface {
 	Fetch(url string) (string, error)
 
 	Store(url string, destination string) error
-	UpdateStatus(url string, finished bool) error
+	SetFinished(url string) error
 	SetFailed(url string) error
 }
 

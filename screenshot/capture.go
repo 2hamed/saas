@@ -28,7 +28,7 @@ func (p phantomJs) Save(url string, destination string) error {
 
 	log.Debug("executing", cmd.String())
 
-	output, err := cmd.Output()
+	output, err := cmd.CombinedOutput()
 
 	if err != nil {
 		log.Error("failed capturing screenshot", string(output))
