@@ -3,6 +3,7 @@ package jobq
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/streadway/amqp"
 )
@@ -18,7 +19,7 @@ var (
 	rabbitMQPass = os.Getenv("RABBITMQ_PASS")
 )
 
-func createRabbitMQ(wc webCapture, jc jobCallback) (*rabbitMQManager, error) {
+func createRabbitMQ(wc webCapture) (*rabbitMQManager, error) {
 	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%s/", rabbitMQUser, rabbitMQPass, rabbitMQHost, rabbitMQPort))
 	if err != nil {
 		return nil, err
@@ -39,7 +40,14 @@ func createRabbitMQ(wc webCapture, jc jobCallback) (*rabbitMQManager, error) {
 	// declaring job queue
 	pubChan.QueueDeclare(qName, true, false, true, true, nil)
 
-	return &rabbitMQManager{conn, pubChan, consumerChan, wc, jc}, nil
+	return &rabbitMQManager{
+		qCon:         conn,
+		pubChan:      pubChan,
+		consumerChan: consumerChan,
+		wc:           wc,
+		finishChan:   make(chan []string, 100),
+		failChan:     make(chan []string, 100),
+	}, nil
 }
 
 type rabbitMQManager struct {
@@ -49,14 +57,24 @@ type rabbitMQManager struct {
 	consumerChan *amqp.Channel
 
 	wc webCapture
-	jc jobCallback
+
+	finishChan chan []string
+	failChan   chan []string
 }
 
-func (m *rabbitMQManager) Enqueue(url string) error {
+func (m *rabbitMQManager) Enqueue(url string, destination string) error {
 	return m.pubChan.Publish("", qName, false, false, amqp.Publishing{
 		ContentType: "text/plain",
-		Body:        []byte(url),
+		Body:        []byte(fmt.Sprintf("%s::%s", url, destination)),
 	})
+}
+
+func (m *rabbitMQManager) FinishChan() <-chan []string {
+	return m.finishChan
+}
+
+func (m *rabbitMQManager) FailChan() <-chan []string {
+	return m.failChan
 }
 
 func (m *rabbitMQManager) startConsumer() {
@@ -73,14 +91,19 @@ func (m *rabbitMQManager) startConsumer() {
 }
 func (m *rabbitMQManager) processJob(d amqp.Delivery) {
 
-	url := string(d.Body)
-	err := m.wc.Save(url, "")
+	urlPathStr := string(d.Body)
+	urlPath := strings.Split(urlPathStr, "::")
+
+	err := m.wc.Save(urlPath[0], urlPath[1])
+
 	if err != nil {
+
 		// TODO: retry this or push to a failed jobs queue
-		m.jc.JobFailed(url)
+
+		m.failChan <- urlPath
 		d.Nack(false, false)
 	} else {
-		m.jc.JobFinished(url)
+		m.finishChan <- urlPath
 		d.Ack(false)
 	}
 
