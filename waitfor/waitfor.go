@@ -22,7 +22,7 @@ func (s *servicesType) Set(value string) error {
 	return nil
 }
 
-// waitForServices tests and waits on the availability of a TCP host and port
+// WaitForServices tests and waits on the availability of a TCP host and port
 func WaitForServices(services []string, timeOut time.Duration) error {
 	var depChan = make(chan struct{})
 	var wg sync.WaitGroup

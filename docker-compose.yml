@@ -1,9 +1,16 @@
 version: "3"
 services:
+  nginx:
+    build: ./.nginx
+    volumes:
+      - shots:/mnt/shots
+    ports:
+      - 80:80
+    depends_on:
+      - capture
+
   capture:
     build: ./
-    ports:
-      - 8080:8080
     environment:
       - LOG_LEVEL=debug
       - RABBITMQ_HOST=queue

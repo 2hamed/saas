@@ -10,8 +10,8 @@ import (
 func StartServer(d dispatcher) error {
 	router := mux.NewRouter()
 
-	router.HandleFunc("/new", NewJobHandler(d)).Methods("POST")
-	router.HandleFunc("/result/{hash}", GetResultHandler(d)).Methods("GET")
+	router.HandleFunc("/api/new", NewJobHandler(d)).Methods("POST")
+	router.HandleFunc("/api/result/{hash}", GetResultHandler(d)).Methods("GET")
 
 	log.Infof("Started HTTP server on %s:%s", "", "8080")
 
