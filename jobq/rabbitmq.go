@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/2hamed/saas/waitfor"
 	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
@@ -29,6 +31,11 @@ func loadConfig() {
 
 func createRabbitMQ(wc webCapture) (*rabbitMQManager, error) {
 	loadConfig()
+
+	waitfor.WaitForServices([]string{
+		fmt.Sprintf("%s:%s", rabbitMQHost, rabbitMQPort),
+	}, 10*time.Second)
+
 	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%s/", rabbitMQUser, rabbitMQPass, rabbitMQHost, rabbitMQPort))
 	if err != nil {
 		return nil, fmt.Errorf("failed connecting to rabbit: %v", err)

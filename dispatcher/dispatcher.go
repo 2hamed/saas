@@ -38,7 +38,9 @@ func (d *dispatcher) Enqueue(url string) error {
 
 	log.Debug("Received url to process", url)
 
-	fileName := hash(url)
+	fileName := hash(url) + ".png"
+
+	fullPath := fmt.Sprintf("%s/%s", os.Getenv("STORAGE_PATH"), fileName)
 
 	err := d.ds.Store(url, fileName)
 
@@ -46,7 +48,7 @@ func (d *dispatcher) Enqueue(url string) error {
 		return fmt.Errorf("failed to store to DataStore: %v", err)
 	}
 
-	return d.q.Enqueue(url, fmt.Sprintf("%s/%s.png", os.Getenv("STORAGE_PATH"), fileName))
+	return d.q.Enqueue(url, fullPath)
 }
 
 func (d *dispatcher) GetStatus(url string) (exists bool, isFinished bool, err error) {

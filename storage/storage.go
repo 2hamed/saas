@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/2hamed/saas/waitfor"
+
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -22,6 +24,10 @@ type DataStore interface {
 }
 
 func NewDataStore() (DataStore, error) {
+
+	waitfor.WaitForServices([]string{
+		fmt.Sprintf("%s:%s", os.Getenv("MONGO_HOST"), os.Getenv("MONGO_PORT")),
+	}, 10*time.Second)
 
 	opts := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s", os.Getenv("MONGO_HOST"), os.Getenv("MONGO_PORT")))
 

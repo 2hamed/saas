@@ -1,7 +1,23 @@
 version: "3"
 services:
-  # capture:
-  #   build: ./
+  capture:
+    build: ./
+    ports:
+      - 8080:8080
+    environment:
+      - LOG_LEVEL=debug
+      - RABBITMQ_HOST=queue
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASS=guest
+      - MONGO_HOST=db
+      - MONGO_PORT=27017
+      - STORAGE_PATH=/mnt/shots
+    volumes:
+      - shots:/mnt/shots
+    depends_on:
+      - queue
+      - db
 
   queue:
     image: rabbitmq:3-management
@@ -13,3 +29,6 @@ services:
     image: mongo
     ports:
       - 27017:27017
+
+volumes:
+  shots:

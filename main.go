@@ -15,7 +15,7 @@ func main() {
 
 	err := godotenv.Load("/home/hamed/dev/projects/saas/.env")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Warn("Error loading .env file")
 	}
 
 	log.SetLevel(log.DebugLevel)
