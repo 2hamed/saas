@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// StartServer starts the http api server
 func StartServer(d dispatcher) error {
 	router := mux.NewRouter()
 

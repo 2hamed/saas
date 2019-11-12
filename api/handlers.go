@@ -11,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// NewJobHandler is the handler to accept new screenshot jobs from the user
 func NewJobHandler(c dispatcher) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// receive urls from request
@@ -40,6 +41,8 @@ func NewJobHandler(c dispatcher) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetResultHandler retreives the result of the request and returns proper
+// response to the user
 func GetResultHandler(d dispatcher) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
