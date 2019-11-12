@@ -14,6 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// DataStore is the abstract type to work with the underlying datastore
 type DataStore interface {
 	Fetch(url string) (string, error)
 	FetchStatus(url string) (exists bool, isFinished bool, err error)
@@ -23,6 +24,7 @@ type DataStore interface {
 	SetFailed(url string) error
 }
 
+// NewDataStore returns an implementation of DataStore
 func NewDataStore() (DataStore, error) {
 
 	waitfor.WaitForServices([]string{
