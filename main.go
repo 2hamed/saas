@@ -12,12 +12,13 @@ import (
 )
 
 func main() {
-	log.SetLevel(log.DebugLevel)
 
 	err := godotenv.Load("/home/hamed/dev/projects/saas/.env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+	log.SetLevel(log.DebugLevel)
 
 	capture, err := screenshot.NewCapture()
 	if err != nil {

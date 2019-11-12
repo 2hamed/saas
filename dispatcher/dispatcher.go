@@ -3,6 +3,7 @@ package dispatcher
 import (
 	"crypto/sha1"
 	"fmt"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -12,6 +13,8 @@ type Dispatcher interface {
 	Enqueue(url string) error
 
 	GetResult(url string) (string, error)
+
+	GetStatus(url string) (exists bool, isFinished bool, err error)
 }
 
 // NewDispatcher returns a new instance of Dispatcher interface
@@ -35,20 +38,23 @@ func (d *dispatcher) Enqueue(url string) error {
 
 	log.Debug("Received url to process", url)
 
-	destPath := getSha1(url)
+	fileName := hash(url)
 
-	err := d.ds.Store(url, destPath)
+	err := d.ds.Store(url, fileName)
 
 	if err != nil {
 		return fmt.Errorf("failed to store to DataStore: %v", err)
 	}
 
-	return d.q.Enqueue(url, fmt.Sprintf("/tmp/%s.png", destPath))
+	return d.q.Enqueue(url, fmt.Sprintf("%s/%s.png", os.Getenv("STORAGE_PATH"), fileName))
+}
+
+func (d *dispatcher) GetStatus(url string) (exists bool, isFinished bool, err error) {
+	return d.ds.FetchStatus(url)
 }
 
 func (d *dispatcher) GetResult(url string) (string, error) {
-	//TODO : get path from dataStore
-	return "", nil
+	return d.ds.Fetch(url)
 }
 
 func (d *dispatcher) listenForResults() {
@@ -77,7 +83,7 @@ func (d *dispatcher) listenForResults() {
 	}()
 }
 
-func getSha1(url string) string {
+func hash(url string) string {
 	hash := sha1.New()
 	_, _ = hash.Write([]byte(url))
 	return fmt.Sprintf("%x", hash.Sum(nil))

@@ -29,11 +29,12 @@ func loadConfig() {
 
 func createRabbitMQ(wc webCapture) (*rabbitMQManager, error) {
 	loadConfig()
-	log.Info("Conneting to RabbitMQ:", fmt.Sprintf("amqp://%s:%s@%s:%s/", rabbitMQUser, rabbitMQPass, rabbitMQHost, rabbitMQPort))
 	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%s/", rabbitMQUser, rabbitMQPass, rabbitMQHost, rabbitMQPort))
 	if err != nil {
 		return nil, fmt.Errorf("failed connecting to rabbit: %v", err)
 	}
+
+	log.Infof("Conncted to RabbitMQ on %s:%s", rabbitMQHost, rabbitMQPort)
 
 	pubChan, err := conn.Channel()
 	if err != nil {

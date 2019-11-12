@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -13,22 +14,30 @@ import (
 
 type DataStore interface {
 	Fetch(url string) (string, error)
+	FetchStatus(url string) (exists bool, isFinished bool, err error)
+
 	Store(url string, destination string) error
 	SetFinished(url string) error
 	SetFailed(url string) error
 }
 
-var (
-	mongoHost = os.Getenv("MONGO_HOST")
-	mongoPort = os.Getenv("MONGO_PORT")
-)
-
 func NewDataStore() (DataStore, error) {
-	ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s", mongoHost, mongoPort)))
+
+	opts := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s", os.Getenv("MONGO_HOST"), os.Getenv("MONGO_PORT")))
+
+	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	client, err := mongo.Connect(ctx, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed connecting to Mongo: %v", err)
 	}
+
+	ctx, _ = context.WithTimeout(context.Background(), 1*time.Second)
+	if err = client.Ping(ctx, nil); err != nil {
+		return nil, fmt.Errorf("failed pinging Mongo: %v", err)
+	}
+
+	log.Infof("Conncted to MongoDB on %s:%s", os.Getenv("MONGO_HOST"), os.Getenv("MONGO_PORT"))
+
 	return &mongoDataStore{
 		client: client,
 	}, nil
@@ -44,18 +53,42 @@ type mongoDataStore struct {
 }
 
 func (s *mongoDataStore) Fetch(url string) (string, error) {
-	res := s.client.Database(databaseName).
-		Collection(collectionName).
-		FindOne(context.Background(), bson.M{
-			"url": url,
-		})
-
+	res := s.client.Database(databaseName).Collection(collectionName).FindOne(context.Background(), bson.M{
+		"url": url,
+	})
+	if res.Err() != nil {
+		return "", fmt.Errorf("failed fetching path from database: %v", res.Err())
+	}
 	var m bson.M
 	err := res.Decode(&m)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed decoding object from database: %v", err)
 	}
 	return m["path"].(string), nil
+}
+
+func (s *mongoDataStore) FetchStatus(url string) (exists bool, isFinished bool, err error) {
+	res := s.client.Database(databaseName).Collection(collectionName).FindOne(context.Background(), bson.M{
+		"url": url,
+	})
+	if res.Err() != nil {
+		if res.Err() == mongo.ErrNoDocuments {
+			return false, false, nil
+		}
+		return false, false, fmt.Errorf("failed fetching path from database: %v", res.Err())
+	}
+
+	var m bson.M
+	err = res.Decode(&m)
+	if err != nil {
+		return false, false, fmt.Errorf("failed decoding object from database: %v", err)
+	}
+
+	if m["status"].(string) == "finished" {
+		return true, true, nil
+	}
+
+	return true, false, nil
 }
 
 func (s *mongoDataStore) Store(url string, destination string) error {
