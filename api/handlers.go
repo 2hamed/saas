@@ -28,7 +28,7 @@ func NewJobHandler(c dispatcher) func(w http.ResponseWriter, r *http.Request) {
 				w.Write([]byte("failed queueing some urls"))
 				return
 			}
-			urlHashes[i] = getBaseURL(r, "") + base64.StdEncoding.EncodeToString([]byte(url))
+			urlHashes[i] = getBaseURL(r, "api/result/") + base64.StdEncoding.EncodeToString([]byte(url))
 		}
 
 		response := map[string]interface{}{
@@ -76,10 +76,10 @@ func GetResultHandler(d dispatcher) func(w http.ResponseWriter, r *http.Request)
 		path, err := d.FetchResult(string(url))
 
 		w.WriteHeader(200)
-		w.Write([]byte(path))
+		w.Write([]byte(getBaseURL(r, path)))
 	}
 }
 
 func getBaseURL(r *http.Request, tail string) string {
-	return fmt.Sprintf("%s://%s/result/%s", "http", r.Host, tail)
+	return fmt.Sprintf("%s://%s/%s", "http", r.Host, tail)
 }
