@@ -18,6 +18,13 @@ func NewJobHandler(c dispatcher) func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 
 		urls := r.FormValue("urls")
+
+		if urls == "" {
+			log.Debugf("supplied request has empty urls")
+			w.WriteHeader(400)
+			return
+		}
+
 		urlsSlice := strings.Split(urls, ";")
 		urlHashes := make([]string, len(urlsSlice))
 
@@ -74,6 +81,12 @@ func GetResultHandler(d dispatcher) func(w http.ResponseWriter, r *http.Request)
 		}
 
 		path, err := d.FetchResult(string(url))
+
+		if err != nil {
+			log.Errorf("failed fetching the result of url: %v", err)
+			w.WriteHeader(500)
+			return
+		}
 
 		w.WriteHeader(200)
 		w.Write([]byte(getBaseURL(r, path)))
