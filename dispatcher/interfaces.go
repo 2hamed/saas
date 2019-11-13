@@ -11,7 +11,6 @@ type dataStore interface {
 
 type queue interface {
 	Enqueue(url string, destination string) error
-
 	FinishChan() <-chan []string
 	FailChan() <-chan []string
 }
