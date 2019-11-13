@@ -55,7 +55,7 @@ func GetResultHandler(d dispatcher) func(w http.ResponseWriter, r *http.Request)
 			return
 		}
 
-		exists, isFinished, err := d.GetStatus(string(url))
+		exists, isFinished, err := d.FetchStatus(string(url))
 
 		if err != nil {
 			log.Errorf("failed checking the status of url: %v", err)
@@ -73,7 +73,7 @@ func GetResultHandler(d dispatcher) func(w http.ResponseWriter, r *http.Request)
 			return
 		}
 
-		path, err := d.GetResult(string(url))
+		path, err := d.FetchResult(string(url))
 
 		w.WriteHeader(200)
 		w.Write([]byte(path))

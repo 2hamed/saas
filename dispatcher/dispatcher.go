@@ -12,9 +12,9 @@ import (
 type Dispatcher interface {
 	Enqueue(url string) error
 
-	GetResult(url string) (string, error)
+	FetchResult(url string) (string, error)
 
-	GetStatus(url string) (exists bool, isFinished bool, err error)
+	FetchStatus(url string) (exists bool, isFinished bool, err error)
 }
 
 // NewDispatcher returns a new instance of Dispatcher interface
@@ -51,11 +51,11 @@ func (d *dispatcher) Enqueue(url string) error {
 	return d.q.Enqueue(url, fullPath)
 }
 
-func (d *dispatcher) GetStatus(url string) (exists bool, isFinished bool, err error) {
+func (d *dispatcher) FetchStatus(url string) (exists bool, isFinished bool, err error) {
 	return d.ds.FetchStatus(url)
 }
 
-func (d *dispatcher) GetResult(url string) (string, error) {
+func (d *dispatcher) FetchResult(url string) (string, error) {
 	return d.ds.Fetch(url)
 }
 
