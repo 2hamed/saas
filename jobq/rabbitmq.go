@@ -29,9 +29,7 @@ func loadConfig() {
 	rabbitMQPass = os.Getenv("RABBITMQ_PASS")
 }
 
-func createRabbitMQ(wc webCapture) (*rabbitMQManager, error) {
-	loadConfig()
-
+func createRabbitMQConnection() (*amqp.Connection, error) {
 	waitfor.WaitForServices([]string{
 		fmt.Sprintf("%s:%s", rabbitMQHost, rabbitMQPort),
 	}, 10*time.Second)
@@ -40,6 +38,11 @@ func createRabbitMQ(wc webCapture) (*rabbitMQManager, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed connecting to rabbit: %v", err)
 	}
+	return conn, nil
+}
+
+func createRabbitMQ(wc webCapture, conn *amqp.Connection) (*rabbitMQManager, error) {
+	loadConfig()
 
 	log.Infof("Conncted to RabbitMQ on %s:%s", rabbitMQHost, rabbitMQPort)
 
