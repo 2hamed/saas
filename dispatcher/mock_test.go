@@ -54,9 +54,9 @@ type mockQueue struct {
 
 func (m *mockQueue) Enqueue(url string, destination string) error {
 	if m.failJob {
-		m.failChan <- []string{}
+		m.failChan <- []string{url, destination}
 	} else {
-		m.finishChan <- []string{}
+		m.finishChan <- []string{url, destination}
 	}
 	return nil
 }
