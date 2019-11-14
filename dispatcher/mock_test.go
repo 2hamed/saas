@@ -1,5 +1,7 @@
 package dispatcher
 
+import "time"
+
 type mockDataStore struct {
 	fetchResult string
 	fetchErr    error
@@ -58,6 +60,8 @@ func (m *mockQueue) Enqueue(url string, destination string) error {
 	} else {
 		m.finishChan <- []string{url, destination}
 	}
+	// to simulate job proccessing
+	time.Sleep(1 * time.Second)
 	return nil
 }
 
