@@ -7,15 +7,14 @@ import (
 )
 
 func TestCapture(t *testing.T) {
-	if testing.Short() {
-		t.Skip("test skipped in short mode")
-	}
+
+	t.Skip("this test should be run on a host which supports PhantomJS")
 
 	c, err := NewCapture()
 	assert.NoError(t, err)
 
-	err = c.Save("http://www.google.com", "/tmp/google.png")
+	err = c.Save("http://www.google.com", "google.png")
 
 	assert.NoError(t, err)
-	assert.FileExists(t, "/tmp/google.png")
+	assert.FileExists(t, "google.png")
 }

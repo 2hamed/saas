@@ -99,3 +99,10 @@ func (s *mongoDataStore) SetFailed(url string) error {
 		})
 	return err
 }
+
+func (s *mongoDataStore) Delete(url string) error {
+	_, err := s.client.Database(databaseName).Collection(collectionName).DeleteMany(context.Background(), bson.M{
+		"url": url,
+	})
+	return err
+}

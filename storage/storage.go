@@ -21,6 +21,7 @@ type DataStore interface {
 	Store(url string, destination string) error
 	SetFinished(url string) error
 	SetFailed(url string) error
+	Delete(url string) error
 }
 
 // NewDataStore returns an implementation of DataStore

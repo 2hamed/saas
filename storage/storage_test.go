@@ -6,7 +6,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFetchEmpty(t *testing.T) {
+func TestDataStore(t *testing.T) {
+
+	if testing.Short() {
+		t.Skip("skipping test in short mode")
+	}
+
 	storage, err := NewDataStore()
 	assert.NoError(t, err)
 
@@ -58,4 +63,7 @@ func TestFetchEmpty(t *testing.T) {
 	assert.True(t, exists)
 	assert.False(t, isPending)
 	assert.False(t, isFinished)
+
+	err = storage.Delete("someurl")
+	assert.NoError(t, err)
 }

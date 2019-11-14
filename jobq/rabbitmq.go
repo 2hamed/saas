@@ -75,6 +75,8 @@ func createRabbitMQ(wc webCapture, conn *amqp.Connection) (*rabbitMQManager, err
 		wc:           wc,
 		finishChan:   make(chan []string, 100),
 		failChan:     make(chan []string, 100),
+
+		stopChan: make(chan struct{}),
 	}
 
 	rmq.startConsumer()
@@ -92,6 +94,8 @@ type rabbitMQManager struct {
 
 	finishChan chan []string
 	failChan   chan []string
+
+	stopChan chan struct{}
 }
 
 func (m *rabbitMQManager) Enqueue(url string, destination string) error {
@@ -117,7 +121,12 @@ func (m *rabbitMQManager) startConsumer() {
 
 	go func() {
 		for {
-			m.processJob(<-consumChan)
+			select {
+			case d := <-consumChan:
+				m.processJob(d)
+			case <-m.stopChan:
+				return
+			}
 		}
 	}()
 }
@@ -142,4 +151,11 @@ func (m *rabbitMQManager) processJob(d amqp.Delivery) {
 		d.Ack(false)
 	}
 
+}
+
+func (m *rabbitMQManager) CleanUp() {
+	m.stopChan <- struct{}{}
+	m.pubChan.Close()
+	m.consumerChan.Close()
+	m.qCon.Close()
 }

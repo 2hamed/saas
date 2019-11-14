@@ -8,6 +8,8 @@ type QManager interface {
 
 	FinishChan() <-chan []string
 	FailChan() <-chan []string
+
+	CleanUp()
 }
 
 // NewQManager returns an implementation of QManager
