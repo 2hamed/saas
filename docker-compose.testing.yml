@@ -1,0 +1,33 @@
+version: "3"
+services:
+  capture:
+    image: 2hamed/golang:1.13-libfontconfig
+    working_dir: /app
+    command: "go test -v -mod vendor ./..."
+    environment:
+      - LOG_LEVEL=debug
+      - RABBITMQ_HOST=queue
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASS=guest
+      - MONGO_HOST=db
+      - MONGO_PORT=27017
+      - STORAGE_PATH=/mnt/shots
+      - PHANTOMJS_PATH=/app/phantomjs/phantomjs
+      - CAPTUREJS_PATH=/app/phantomjs/capture.js
+    volumes:
+      - ./:/app
+    depends_on:
+      - queue
+      - db
+
+  queue:
+    image: rabbitmq:3-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+
+  db:
+    image: mongo
+    ports:
+      - 27017:27017
