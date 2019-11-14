@@ -21,6 +21,7 @@ type mockDispatcher struct {
 
 	statusExists     bool
 	statusIsFinished bool
+	statusIsPending  bool
 	statusErr        error
 }
 
@@ -30,8 +31,8 @@ func (md mockDispatcher) Enqueue(url string) error {
 func (md mockDispatcher) FetchResult(url string) (string, error) {
 	return md.result, md.resultErr
 }
-func (md mockDispatcher) FetchStatus(url string) (exists bool, isFinished bool, err error) {
-	return md.statusExists, md.statusIsFinished, md.statusErr
+func (md mockDispatcher) FetchStatus(url string) (exists bool, isPending bool, isFinished bool, err error) {
+	return md.statusExists, md.statusIsPending, md.statusIsFinished, md.statusErr
 }
 
 func TestNewJobHandlerSuccess(t *testing.T) {
@@ -39,7 +40,7 @@ func TestNewJobHandlerSuccess(t *testing.T) {
 	d := mockDispatcher{}
 	rec := httptest.NewRecorder()
 
-	req, _ := http.NewRequest("POST", "/api/new", strings.NewReader(url.Values{"urls": []string{"http://google.com"}}.Encode()))
+	req, _ := http.NewRequest("POST", "/api/new", strings.NewReader(url.Values{"urls": []string{"http://google.com;http://stackoverflow.com"}}.Encode()))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	handler := http.HandlerFunc(NewJobHandler(d))
@@ -126,13 +127,14 @@ func TestGetResultHandlerNotFound(t *testing.T) {
 
 }
 
-func TestGetResultHandlerNotFinished(t *testing.T) {
+func TestGetResultHandlerIsPending(t *testing.T) {
 
 	d := mockDispatcher{
 		result: "",
 
 		statusExists:     true,
 		statusIsFinished: false,
+		statusIsPending:  true,
 		statusErr:        nil,
 	}
 	rec := httptest.NewRecorder()
@@ -144,6 +146,28 @@ func TestGetResultHandlerNotFinished(t *testing.T) {
 	handler.ServeHTTP(rec, req)
 
 	assert.Equal(t, 204, rec.Result().StatusCode)
+
+}
+
+func TestGetResultHandlerJobFailed(t *testing.T) {
+
+	d := mockDispatcher{
+		result: "",
+
+		statusExists:     true,
+		statusIsFinished: false,
+		statusIsPending:  false,
+		statusErr:        nil,
+	}
+	rec := httptest.NewRecorder()
+
+	req, _ := http.NewRequest("GET", "/api/result/aHR0cDovL2dvb2dsZS5jb20gLW4K", nil)
+
+	handler := http.HandlerFunc(GetResultHandler(d))
+
+	handler.ServeHTTP(rec, req)
+
+	assert.Equal(t, 501, rec.Result().StatusCode)
 
 }
 

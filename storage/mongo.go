@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -33,28 +34,31 @@ func (s *mongoDataStore) Fetch(url string) (string, error) {
 	return m["path"].(string), nil
 }
 
-func (s *mongoDataStore) FetchStatus(url string) (exists bool, isFinished bool, err error) {
+func (s *mongoDataStore) FetchStatus(url string) (exists bool, isPending bool, isFinished bool, err error) {
 	res := s.client.Database(databaseName).Collection(collectionName).FindOne(context.Background(), bson.M{
 		"url": url,
 	})
 	if res.Err() != nil {
 		if res.Err() == mongo.ErrNoDocuments {
-			return false, false, nil
+			return false, false, false, nil
 		}
-		return false, false, fmt.Errorf("failed fetching path from database: %v", res.Err())
+		return false, false, false, fmt.Errorf("failed fetching path from database: %v", res.Err())
 	}
 
 	var m bson.M
 	err = res.Decode(&m)
 	if err != nil {
-		return false, false, fmt.Errorf("failed decoding object from database: %v", err)
+		return false, false, false, fmt.Errorf("failed decoding object from database: %v", err)
+	}
+	if m["status"].(string) == "pending" {
+		return true, true, false, nil
+	} else if m["status"].(string) == "finished" {
+		return true, false, true, nil
+	} else if m["status"].(string) == "failed" {
+		return true, false, false, nil
 	}
 
-	if m["status"].(string) == "finished" {
-		return true, true, nil
-	}
-
-	return true, false, nil
+	return false, false, false, errors.New("this is an unkown status and should never happen")
 }
 
 func (s *mongoDataStore) Store(url string, destination string) error {

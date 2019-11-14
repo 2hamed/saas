@@ -34,6 +34,7 @@ func TestEnqueueSuccess(t *testing.T) {
 	err = d.Enqueue("some url")
 	assert.NoError(t, err)
 
+	assert.True(t, mockDataStore.wasStoreCalled)
 	assert.True(t, mockDataStore.wasSetFinishedCalled)
 
 }
@@ -65,6 +66,7 @@ func TestEnqueueJobFail(t *testing.T) {
 	err = d.Enqueue("some url")
 	assert.NoError(t, err)
 
+	assert.True(t, mockDataStore.wasStoreCalled)
 	assert.True(t, mockDataStore.wasSetFailedCalled)
 }
 

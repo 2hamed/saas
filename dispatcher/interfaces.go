@@ -2,7 +2,7 @@ package dispatcher
 
 type dataStore interface {
 	Fetch(url string) (string, error)
-	FetchStatus(url string) (exists bool, isFinished bool, err error)
+	FetchStatus(url string) (exists bool, isPending bool, isFinished bool, err error)
 
 	Store(url string, destination string) error
 	SetFinished(url string) error

@@ -30,9 +30,11 @@ func loadConfig() {
 }
 
 func createRabbitMQConnection() (*amqp.Connection, error) {
+	loadConfig()
+
 	waitfor.WaitForServices([]string{
 		fmt.Sprintf("%s:%s", rabbitMQHost, rabbitMQPort),
-	}, 10*time.Second)
+	}, 60*time.Second)
 
 	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%s/", rabbitMQUser, rabbitMQPass, rabbitMQHost, rabbitMQPort))
 	if err != nil {
@@ -42,7 +44,6 @@ func createRabbitMQConnection() (*amqp.Connection, error) {
 }
 
 func createRabbitMQ(wc webCapture, conn *amqp.Connection) (*rabbitMQManager, error) {
-	loadConfig()
 
 	log.Infof("Conncted to RabbitMQ on %s:%s", rabbitMQHost, rabbitMQPort)
 

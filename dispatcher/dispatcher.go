@@ -14,7 +14,7 @@ type Dispatcher interface {
 
 	FetchResult(url string) (string, error)
 
-	FetchStatus(url string) (exists bool, isFinished bool, err error)
+	FetchStatus(url string) (exists bool, isPending bool, isFinished bool, err error)
 }
 
 // NewDispatcher returns a new instance of Dispatcher interface
@@ -51,7 +51,7 @@ func (d *dispatcher) Enqueue(url string) error {
 	return d.q.Enqueue(url, fullPath)
 }
 
-func (d *dispatcher) FetchStatus(url string) (exists bool, isFinished bool, err error) {
+func (d *dispatcher) FetchStatus(url string) (exists bool, isPending bool, isFinished bool, err error) {
 	return d.ds.FetchStatus(url)
 }
 

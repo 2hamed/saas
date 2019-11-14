@@ -8,6 +8,7 @@ type mockDataStore struct {
 
 	fetchStatusExists     bool
 	fetchStatusIsFinished bool
+	fetchStatusIsPending  bool
 	fetchStatusErr        error
 
 	storeErr error
@@ -27,9 +28,9 @@ func (m *mockDataStore) Fetch(url string) (string, error) {
 	return m.fetchResult, m.fetchErr
 }
 
-func (m *mockDataStore) FetchStatus(url string) (exists bool, isFinished bool, err error) {
+func (m *mockDataStore) FetchStatus(url string) (exists bool, isPending bool, isFinished bool, err error) {
 	m.wasFetchStatusCalled = true
-	return m.fetchStatusExists, m.fetchStatusIsFinished, m.fetchStatusErr
+	return m.fetchStatusExists, m.fetchStatusIsPending, m.fetchStatusIsFinished, m.fetchStatusErr
 }
 
 func (m *mockDataStore) Store(url string, destination string) error {

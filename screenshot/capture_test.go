@@ -1,18 +1,15 @@
 package screenshot
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func setup() {
-	os.Setenv("PHANTOMJS_PATH", "/home/hamed/dev/projects/saas/phantomjs/phantomjs")
-	os.Setenv("CAPTUREJS_PATH", "/home/hamed/dev/projects/saas/phantomjs/capture.js")
-}
 func TestCapture(t *testing.T) {
-	setup()
+	if testing.Short() {
+		t.Skip("test skipped in short mode")
+	}
 
 	c, err := NewCapture()
 	assert.NoError(t, err)
