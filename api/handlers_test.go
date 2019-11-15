@@ -167,7 +167,7 @@ func TestGetResultHandlerJobFailed(t *testing.T) {
 
 	handler.ServeHTTP(rec, req)
 
-	assert.Equal(t, 501, rec.Result().StatusCode)
+	assert.Equal(t, 503, rec.Result().StatusCode)
 
 }
 

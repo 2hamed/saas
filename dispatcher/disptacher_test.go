@@ -2,6 +2,7 @@ package dispatcher
 
 import (
 	"errors"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,6 +21,10 @@ func TestEnqueueSuccess(t *testing.T) {
 
 		setFinishedErr: nil,
 		setFailedErr:   nil,
+
+		storeMutex:       &sync.Mutex{},
+		setFailedMutex:   &sync.Mutex{},
+		setFinishedMutex: &sync.Mutex{},
 	}
 
 	mockQueue := &mockQueue{
@@ -34,8 +39,8 @@ func TestEnqueueSuccess(t *testing.T) {
 	err = d.Enqueue("some url")
 	assert.NoError(t, err)
 
-	assert.True(t, mockDataStore.wasStoreCalled)
-	assert.True(t, mockDataStore.wasSetFinishedCalled)
+	assert.True(t, mockDataStore.WasStoreCalled())
+	assert.True(t, mockDataStore.WasSetFinishedCalled())
 
 }
 
@@ -52,6 +57,10 @@ func TestEnqueueJobFail(t *testing.T) {
 
 		setFinishedErr: nil,
 		setFailedErr:   nil,
+
+		storeMutex:       &sync.Mutex{},
+		setFailedMutex:   &sync.Mutex{},
+		setFinishedMutex: &sync.Mutex{},
 	}
 
 	mockQueue := &mockQueue{
@@ -66,8 +75,8 @@ func TestEnqueueJobFail(t *testing.T) {
 	err = d.Enqueue("some url")
 	assert.NoError(t, err)
 
-	assert.True(t, mockDataStore.wasStoreCalled)
-	assert.True(t, mockDataStore.wasSetFailedCalled)
+	assert.True(t, mockDataStore.WasStoreCalled())
+	assert.True(t, mockDataStore.WasSetFailedCalled())
 }
 
 func TestEnqueueStoreFailed(t *testing.T) {
@@ -83,6 +92,10 @@ func TestEnqueueStoreFailed(t *testing.T) {
 
 		setFinishedErr: nil,
 		setFailedErr:   nil,
+
+		storeMutex:       &sync.Mutex{},
+		setFailedMutex:   &sync.Mutex{},
+		setFinishedMutex: &sync.Mutex{},
 	}
 
 	mockQueue := &mockQueue{
@@ -97,7 +110,7 @@ func TestEnqueueStoreFailed(t *testing.T) {
 	err = d.Enqueue("some url")
 	assert.Error(t, err)
 
-	assert.False(t, mockDataStore.wasSetFailedCalled)
-	assert.False(t, mockDataStore.wasSetFinishedCalled)
+	assert.False(t, mockDataStore.WasSetFailedCalled())
+	assert.False(t, mockDataStore.WasSetFinishedCalled())
 
 }

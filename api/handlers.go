@@ -81,7 +81,7 @@ func GetResultHandler(d dispatcher) func(w http.ResponseWriter, r *http.Request)
 		}
 
 		if !isFinished {
-			w.WriteHeader(501)
+			w.WriteHeader(503)
 			return
 		}
 

@@ -1,6 +1,9 @@
 package dispatcher
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 type mockDataStore struct {
 	fetchResult string
@@ -21,6 +24,11 @@ type mockDataStore struct {
 	wasStoreCalled       bool
 	wasSetFailedCalled   bool
 	wasSetFinishedCalled bool
+
+	// These mutexes are just to avoid race conditions in tests
+	setFailedMutex   *sync.Mutex
+	setFinishedMutex *sync.Mutex
+	storeMutex       *sync.Mutex
 }
 
 func (m *mockDataStore) Fetch(url string) (string, error) {
@@ -34,18 +42,45 @@ func (m *mockDataStore) FetchStatus(url string) (exists bool, isPending bool, is
 }
 
 func (m *mockDataStore) Store(url string, destination string) error {
+	m.storeMutex.Lock()
 	m.wasStoreCalled = true
+	m.storeMutex.Unlock()
+
 	return m.storeErr
 }
 
 func (m *mockDataStore) SetFinished(url string) error {
+	m.setFinishedMutex.Lock()
 	m.wasSetFinishedCalled = true
+	m.setFinishedMutex.Unlock()
+
 	return m.setFinishedErr
 }
 
 func (m *mockDataStore) SetFailed(url string) error {
+	m.setFailedMutex.Lock()
 	m.wasSetFailedCalled = true
+	m.setFailedMutex.Unlock()
+
 	return m.setFailedErr
+}
+
+func (m *mockDataStore) WasSetFailedCalled() bool {
+	m.setFailedMutex.Lock()
+	defer m.setFailedMutex.Unlock()
+	return m.wasSetFailedCalled
+}
+
+func (m *mockDataStore) WasSetFinishedCalled() bool {
+	m.setFinishedMutex.Lock()
+	defer m.setFinishedMutex.Unlock()
+	return m.wasSetFinishedCalled
+}
+
+func (m *mockDataStore) WasStoreCalled() bool {
+	m.storeMutex.Lock()
+	defer m.storeMutex.Unlock()
+	return m.wasStoreCalled
 }
 
 type mockQueue struct {
