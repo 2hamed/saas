@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/2hamed/saas/api"
 	"github.com/2hamed/saas/dispatcher"
+	"github.com/2hamed/saas/filestore"
 	"github.com/2hamed/saas/jobq"
 	"github.com/2hamed/saas/screenshot"
 	"github.com/2hamed/saas/storage"
@@ -35,7 +36,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	dispatcher, err := dispatcher.NewDispatcher(ds, qManager, nil)
+	fs, err := filestore.NewFileStore()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dispatcher, err := dispatcher.NewDispatcher(ds, qManager, fs)
 	if err != nil {
 		log.Fatal(err)
 	}

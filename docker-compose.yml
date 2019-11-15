@@ -20,6 +20,10 @@ services:
       - MONGO_HOST=db
       - MONGO_PORT=27017
       - STORAGE_PATH=/mnt/shots
+      - MINIO_HOST=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESSKEY=miniokey
+      - MINIO_SECRET=miniosecret
     volumes:
       - shots:/mnt/shots
     depends_on:
@@ -36,6 +40,15 @@ services:
     image: mongo
     ports:
       - 27017:27017
+
+  minio:
+    image: minio/minio
+    command: "server /data"
+    ports:
+      - 9000:9000
+    environment:
+      - MINIO_ACCESS_KEY=miniokey
+      - MINIO_SECRET_KEY=miniosecret
 
 volumes:
   shots:
