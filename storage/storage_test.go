@@ -40,7 +40,7 @@ func TestDataStore(t *testing.T) {
 	path, err = storage.Fetch("someurl")
 	assert.NoError(t, err)
 
-	assert.Equal(t, "somepath", path)
+	assert.Equal(t, "newpath", path)
 
 	//----------------
 	exists, isPending, isFinished, err = storage.FetchStatus("someurl")
