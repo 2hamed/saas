@@ -96,3 +96,8 @@ I have used `PhantomJS` as an implementation of the `Capture` interface, but it 
 
 Since this service uses a message queue, it is inherently scalable and since it's already containerized, it can be deployed to the cloud without much work. To scale it out, just increase the number of pods (containers) and you're good to go.
 
+## Minio
+
+At the last minute I thought it'd be a good idea to have a cloud native solution for file storage as well (the files were previously stored on a mounted volume) so I added Minio as the file storage service. Minio is compatible with Amazon's S3 protocol so it's a cinch to replace it with AWS Cloud storage.
+
+Note: Having a filestore is not mandatory for the system to work and it works perfectly without it. That's why I did not bring it up in Architecture section above.
