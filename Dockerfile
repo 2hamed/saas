@@ -10,6 +10,8 @@ FROM ubuntu:bionic
 
 RUN apt update
 RUN apt install -y libfontconfig
+RUN apt install -y bzip2
+RUN apt install -y ca-certificates
 
 COPY ./phantomjs/phantomjs /app/phantomjs
 COPY ./phantomjs/capture.js /app/capture.js

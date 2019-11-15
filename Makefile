@@ -45,21 +45,13 @@ run:
 # Test & Coverage
 ############################################################
 test:
-	go test -short -gcflags=-l -mod vendor -v ./...
+	go test -race -short -gcflags=-l -mod vendor -v ./...
 
 test-integration:
-	RABBITMQ_HOST=localhost \
-	RABBITMQ_PORT=5672 \
-	RABBITMQ_USER=guest \
-	RABBITMQ_PASS=guest \
-	MONGO_HOST=localhost \
-	MONGO_PORT=27017 \
-	PHANTOMJS_PATH=${ROOT}/phantomjs/phantomjs \
-	CAPTUREJS_PATH=${ROOT}/phantomjs/capture.js \
-	go test -mod vendor -v ./...
+	docker-compose -f ${ROOT}/docker-compose.testing.yml up
 
 coverage:
-	go test -short -gcflags=-l -mod vendor -v -coverprofile=.testCoverage.txt ./...
+	go test -race -short -gcflags=-l -mod vendor -v -coverprofile=.testCoverage.txt ./...
 	GOFLAGS=-mod=vendor go tool cover -func=.testCoverage.txt
 
 coverage-report: coverage

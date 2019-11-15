@@ -118,7 +118,8 @@ func (m *rabbitMQManager) startConsumer() {
 	if err != nil {
 		panic(err)
 	}
-
+	// There could more than one consumers (worker) for jobs to
+	// to process jobs
 	go func() {
 		for {
 			select {
@@ -142,6 +143,7 @@ func (m *rabbitMQManager) processJob(d amqp.Delivery) {
 
 	if err != nil {
 		log.Error("Saving screenshot failed", err)
+
 		// TODO: retry this or push to a failed jobs queue
 
 		m.failChan <- urlPath
