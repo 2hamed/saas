@@ -18,10 +18,13 @@ type Dispatcher interface {
 }
 
 // NewDispatcher returns a new instance of Dispatcher interface
-func NewDispatcher(ds dataStore, q queue) (Dispatcher, error) {
+// ds (dataStore) and q (queue) are required
+// fs (fileStore) is optional and can be nil
+func NewDispatcher(ds dataStore, q queue, fs filestore) (Dispatcher, error) {
 	d := &dispatcher{
 		ds: ds,
 		q:  q,
+		fs: fs,
 	}
 
 	d.listenForResults()
@@ -32,6 +35,7 @@ func NewDispatcher(ds dataStore, q queue) (Dispatcher, error) {
 type dispatcher struct {
 	ds dataStore
 	q  queue
+	fs filestore
 }
 
 func (d *dispatcher) Enqueue(url string) error {
@@ -64,21 +68,34 @@ func (d *dispatcher) listenForResults() {
 	go func() {
 		for {
 			select {
-			case r := <-d.q.FinishChan():
-				log.Debug("Received finish signal for", r)
+			case result := <-d.q.FinishChan():
+				log.Debug("Received finish signal for", result)
 
-				err := d.ds.SetFinished(r[0])
+				if d.fs != nil {
+					remoteUrl, err := d.fs.Store(result[1])
 
-				if err != nil {
-					log.Error("failed to update status for", r, err)
+					if err != nil {
+						log.Errorf("failed to store file in filestore: %v", err)
+					} else {
+						err = d.ds.UpdatePath(result[0], remoteUrl)
+						if err != nil {
+							log.Errorf("failed to update path for url: %v", err)
+						}
+					}
 				}
-			case r := <-d.q.FailChan():
-				log.Debug("Received fail signal for ", r)
 
-				err := d.ds.SetFailed(r[0])
+				err := d.ds.SetFinished(result[0])
 
 				if err != nil {
-					log.Error("failed to set failed for", r, err)
+					log.Error("failed to update status for ", result, err)
+				}
+			case result := <-d.q.FailChan():
+				log.Debug("Received fail signal for ", result)
+
+				err := d.ds.SetFailed(result[0])
+
+				if err != nil {
+					log.Error("failed to set failed for", result, err)
 				}
 			}
 		}

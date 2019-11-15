@@ -19,6 +19,7 @@ type DataStore interface {
 	FetchStatus(url string) (exists bool, isPending bool, isFinished bool, err error)
 
 	Store(url string, destination string) error
+	UpdatePath(url string, destination string) error
 	SetFinished(url string) error
 	SetFailed(url string) error
 	Delete(url string) error

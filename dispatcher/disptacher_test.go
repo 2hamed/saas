@@ -33,7 +33,7 @@ func TestEnqueueSuccess(t *testing.T) {
 		failChan:   make(chan []string),
 	}
 
-	d, err := NewDispatcher(mockDataStore, mockQueue)
+	d, err := NewDispatcher(mockDataStore, mockQueue, nil)
 	assert.NoError(t, err)
 
 	err = d.Enqueue("some url")
@@ -69,7 +69,7 @@ func TestEnqueueJobFail(t *testing.T) {
 		failChan:   make(chan []string),
 	}
 
-	d, err := NewDispatcher(mockDataStore, mockQueue)
+	d, err := NewDispatcher(mockDataStore, mockQueue, nil)
 	assert.NoError(t, err)
 
 	err = d.Enqueue("some url")
@@ -104,7 +104,7 @@ func TestEnqueueStoreFailed(t *testing.T) {
 		failChan:   make(chan []string),
 	}
 
-	d, err := NewDispatcher(mockDataStore, mockQueue)
+	d, err := NewDispatcher(mockDataStore, mockQueue, nil)
 	assert.NoError(t, err)
 
 	err = d.Enqueue("some url")

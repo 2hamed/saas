@@ -35,7 +35,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	dispatcher, err := dispatcher.NewDispatcher(ds, qManager)
+	dispatcher, err := dispatcher.NewDispatcher(ds, qManager, nil)
 	if err != nil {
 		log.Fatal(err)
 	}

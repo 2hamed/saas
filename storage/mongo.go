@@ -106,3 +106,16 @@ func (s *mongoDataStore) Delete(url string) error {
 	})
 	return err
 }
+
+func (s *mongoDataStore) UpdatePath(url string, destination string) error {
+	_, err := s.client.Database(databaseName).Collection(collectionName).UpdateOne(context.Background(),
+		bson.M{
+			"url": url,
+		},
+		bson.M{
+			"$set": bson.M{
+				"path": destination,
+			},
+		})
+	return err
+}

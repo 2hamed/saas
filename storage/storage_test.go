@@ -34,6 +34,15 @@ func TestDataStore(t *testing.T) {
 	assert.Equal(t, "somepath", path)
 
 	//----------------
+	err = storage.UpdatePath("someurl", "newpath")
+	assert.NoError(t, err)
+
+	path, err = storage.Fetch("someurl")
+	assert.NoError(t, err)
+
+	assert.Equal(t, "somepath", path)
+
+	//----------------
 	exists, isPending, isFinished, err = storage.FetchStatus("someurl")
 
 	assert.NoError(t, err)

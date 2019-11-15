@@ -19,11 +19,14 @@ type mockDataStore struct {
 	setFinishedErr error
 	setFailedErr   error
 
+	updatePathErr error
+
 	wasFetchCalled       bool
 	wasFetchStatusCalled bool
 	wasStoreCalled       bool
 	wasSetFailedCalled   bool
 	wasSetFinishedCalled bool
+	wasUpdatePathCalled  bool
 
 	// These mutexes are just to avoid race conditions in tests
 	setFailedMutex   *sync.Mutex
@@ -81,6 +84,10 @@ func (m *mockDataStore) WasStoreCalled() bool {
 	m.storeMutex.Lock()
 	defer m.storeMutex.Unlock()
 	return m.wasStoreCalled
+}
+func (m *mockDataStore) UpdatePath(url string, destination string) error {
+	m.wasUpdatePathCalled = true
+	return m.updatePathErr
 }
 
 type mockQueue struct {

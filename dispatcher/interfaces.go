@@ -5,6 +5,7 @@ type dataStore interface {
 	FetchStatus(url string) (exists bool, isPending bool, isFinished bool, err error)
 
 	Store(url string, destination string) error
+	UpdatePath(url string, destination string) error
 	SetFinished(url string) error
 	SetFailed(url string) error
 }
@@ -13,4 +14,8 @@ type queue interface {
 	Enqueue(url string, destination string) error
 	FinishChan() <-chan []string
 	FailChan() <-chan []string
+}
+
+type filestore interface {
+	Store(path string) (string, error)
 }
