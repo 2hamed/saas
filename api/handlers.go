@@ -20,7 +20,7 @@ func NewJobHandler(c dispatcher) func(w http.ResponseWriter, r *http.Request) {
 		urls := r.FormValue("urls")
 
 		if urls == "" {
-			log.Debugf("supplied request has empty urls")
+			log.Debug("supplied request has empty urls")
 			w.WriteHeader(400)
 			return
 		}

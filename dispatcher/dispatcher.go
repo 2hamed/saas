@@ -40,7 +40,7 @@ type dispatcher struct {
 
 func (d *dispatcher) Enqueue(url string) error {
 
-	log.Debug("Received url to process", url)
+	log.Debugf("Received url to process: %s", url)
 
 	fileName := hash(url) + ".png"
 
@@ -49,7 +49,7 @@ func (d *dispatcher) Enqueue(url string) error {
 	err := d.ds.Store(url, fileName)
 
 	if err != nil {
-		return fmt.Errorf("failed to store to DataStore: %v", err)
+		return fmt.Errorf("failed to store to DataStore: %w", err)
 	}
 
 	return d.q.Enqueue(url, fullPath)
@@ -100,7 +100,7 @@ func (d *dispatcher) processFinishSignal(result []string) {
 	err := d.ds.SetFinished(result[0])
 
 	if err != nil {
-		log.Error("failed to update status for ", result, err)
+		log.Errorf("failed to update status for: %v --> %v ", result, err)
 	}
 }
 
@@ -108,7 +108,7 @@ func (d *dispatcher) processFailSignal(result []string) {
 	err := d.ds.SetFailed(result[0])
 
 	if err != nil {
-		log.Error("failed to set failed for", result, err)
+		log.Errorf("failed to set failed for: %v --> %v", result, err)
 	}
 }
 

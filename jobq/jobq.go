@@ -16,7 +16,7 @@ type QManager interface {
 func NewQManager(webCapture webCapture) (QManager, error) {
 	conn, err := createRabbitMQConnection()
 	if err != nil {
-		return nil, fmt.Errorf("failed connecting to rabbitmq instance: %v", err)
+		return nil, fmt.Errorf("failed connecting to rabbitmq instance: %w", err)
 	}
 
 	return createRabbitMQ(webCapture, conn)

@@ -17,13 +17,27 @@ const (
 	location   = "global"
 )
 
+var (
+	minioHost string
+	minioPort string
+)
+
+func initConfig() {
+	minioHost = os.Getenv("MINIO_HOST")
+	minioPort = os.Getenv("MINIO_PORT")
+}
+
 func createMinio() (*minioFileStore, error) {
 
+	initConfig()
+
 	waitfor.WaitForServices([]string{
-		fmt.Sprintf("%s:%s", os.Getenv("MINIO_HOST"), os.Getenv("MINIO_PORT")),
+		fmt.Sprintf("%s:%s", minioHost, minioPort),
 	}, 60*time.Second)
 
-	endpoint := fmt.Sprintf("%s:%s", os.Getenv("MINIO_HOST"), os.Getenv("MINIO_PORT"))
+	log.Infof("Connecting to Minio on %s:%s", minioHost, minioPort)
+
+	endpoint := fmt.Sprintf("%s:%s", minioHost, minioPort)
 	accessKeyID := os.Getenv("MINIO_ACCESSKEY")
 	secretAccessKey := os.Getenv("MINIO_SECRET")
 
@@ -41,10 +55,10 @@ func createMinio() (*minioFileStore, error) {
 		if errBucketExists == nil && exists {
 			log.Debugf("We already own %s", bucketName)
 		} else {
-			return nil, fmt.Errorf("failed to create minio bucket: %v, %v", err, errBucketExists)
+			return nil, fmt.Errorf("failed to create minio bucket: %w, %v", err, errBucketExists)
 		}
 	} else {
-		log.Debugf("Successfully created %s", bucketName)
+		log.Debugf("Successfully created bucket[%s]", bucketName)
 	}
 
 	policy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetBucketLocation","s3:ListBucket"],"Resource":["arn:aws:s3:::shots"]},{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::shots/*"]}]}`
@@ -54,7 +68,7 @@ func createMinio() (*minioFileStore, error) {
 		return nil, err
 	}
 
-	log.Infof("Minio bucket policy: %s", policy)
+	log.Debugf("Minio bucket policy: %s", policy)
 
 	return &minioFileStore{
 		client: client,
@@ -67,10 +81,11 @@ type minioFileStore struct {
 
 func (m *minioFileStore) Store(path string) (string, error) {
 	log.Debug("Uploading file to minio")
+
 	contentType, err := getFileContentType(path)
 
 	if err != nil {
-		return "", fmt.Errorf("failed get file content type: %v", err)
+		return "", fmt.Errorf("failed get file content type: %w", err)
 	}
 
 	fileName := getFileName(path)

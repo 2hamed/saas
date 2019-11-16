@@ -22,16 +22,16 @@ type phantomJs struct {
 }
 
 func (p phantomJs) Save(url string, destination string) error {
-	log.Debug("capture initiated for", url)
+	log.Debugf("Capture initiated for %s", url)
 
 	cmd := exec.Command(os.Getenv("PHANTOMJS_PATH"), os.Getenv("CAPTUREJS_PATH"), url, destination)
 
-	log.Debug("executing", cmd.String())
+	log.Debugf("Executing %s", cmd.String())
 
 	output, err := cmd.CombinedOutput()
 
 	if err != nil {
-		log.Error("failed capturing screenshot", string(output))
+		log.Errorf("failed capturing screenshot: %s", string(output))
 	}
 
 	return err

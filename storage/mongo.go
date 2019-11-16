@@ -4,10 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
+	"github.com/2hamed/saas/waitfor"
+	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const (
@@ -15,8 +19,46 @@ const (
 	collectionName = "jobs"
 )
 
+var (
+	mongoHost string
+	mongoPort string
+)
+
+func initConfig() {
+	mongoHost = os.Getenv("MONGO_HOST")
+	mongoPort = os.Getenv("MONGO_PORT")
+}
+
 type mongoDataStore struct {
 	client *mongo.Client
+}
+
+func createMongoDataStore() (*mongoDataStore, error) {
+
+	initConfig()
+
+	waitfor.WaitForServices([]string{
+		fmt.Sprintf("%s:%s", mongoHost, mongoPort),
+	}, 10*time.Second)
+
+	log.Infof("Conncting to MongoDB on %s:%s", mongoHost, mongoPort)
+
+	opts := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s", mongoHost, mongoPort))
+
+	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	client, err := mongo.Connect(ctx, opts)
+	if err != nil {
+		return nil, fmt.Errorf("failed connecting to Mongo: %w", err)
+	}
+
+	ctx, _ = context.WithTimeout(context.Background(), 1*time.Second)
+	if err = client.Ping(ctx, nil); err != nil {
+		return nil, fmt.Errorf("failed pinging Mongo: %w", err)
+	}
+
+	return &mongoDataStore{
+		client: client,
+	}, nil
 }
 
 func (s *mongoDataStore) Fetch(url string) (string, error) {
@@ -24,12 +66,12 @@ func (s *mongoDataStore) Fetch(url string) (string, error) {
 		"url": url,
 	})
 	if res.Err() != nil {
-		return "", fmt.Errorf("failed fetching path from database: %v", res.Err())
+		return "", fmt.Errorf("failed fetching path from database: %w", res.Err())
 	}
 	var m bson.M
 	err := res.Decode(&m)
 	if err != nil {
-		return "", fmt.Errorf("failed decoding object from database: %v", err)
+		return "", fmt.Errorf("failed decoding object from database: %w", err)
 	}
 	return m["path"].(string), nil
 }
@@ -42,13 +84,13 @@ func (s *mongoDataStore) FetchStatus(url string) (exists bool, isPending bool, i
 		if res.Err() == mongo.ErrNoDocuments {
 			return false, false, false, nil
 		}
-		return false, false, false, fmt.Errorf("failed fetching path from database: %v", res.Err())
+		return false, false, false, fmt.Errorf("failed fetching path from database: %w", res.Err())
 	}
 
 	var m bson.M
 	err = res.Decode(&m)
 	if err != nil {
-		return false, false, false, fmt.Errorf("failed decoding object from database: %v", err)
+		return false, false, false, fmt.Errorf("failed decoding object from database: %w", err)
 	}
 	if m["status"].(string) == "pending" {
 		return true, true, false, nil

@@ -22,7 +22,7 @@ var (
 	rabbitMQPass string
 )
 
-func loadConfig() {
+func initConfig() {
 	rabbitMQHost = os.Getenv("RABBITMQ_HOST")
 	rabbitMQPort = os.Getenv("RABBITMQ_PORT")
 	rabbitMQUser = os.Getenv("RABBITMQ_USER")
@@ -30,42 +30,42 @@ func loadConfig() {
 }
 
 func createRabbitMQConnection() (*amqp.Connection, error) {
-	loadConfig()
+
+	initConfig()
 
 	waitfor.WaitForServices([]string{
 		fmt.Sprintf("%s:%s", rabbitMQHost, rabbitMQPort),
 	}, 60*time.Second)
 
+	log.Infof("Conncting to RabbitMQ on %s:%s", rabbitMQHost, rabbitMQPort)
+
 	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%s/", rabbitMQUser, rabbitMQPass, rabbitMQHost, rabbitMQPort))
 	if err != nil {
-		return nil, fmt.Errorf("failed connecting to rabbit: %v", err)
+		return nil, fmt.Errorf("failed connecting to rabbit: %w", err)
 	}
 	return conn, nil
 }
 
 func createRabbitMQ(wc webCapture, conn *amqp.Connection) (*rabbitMQManager, error) {
-
-	log.Infof("Conncted to RabbitMQ on %s:%s", rabbitMQHost, rabbitMQPort)
-
 	pubChan, err := conn.Channel()
 	if err != nil {
-		return nil, fmt.Errorf("failed creating pub channel: %v", err)
+		return nil, fmt.Errorf("failed creating pub channel: %w", err)
 	}
 
 	consumerChan, err := conn.Channel()
 	if err != nil {
-		return nil, fmt.Errorf("failed creating consumer channel: %v", err)
+		return nil, fmt.Errorf("failed creating consumer channel: %w", err)
 	}
 
 	err = consumerChan.Qos(1, 0, true)
 	if err != nil {
-		return nil, fmt.Errorf("failed setting Qos: %v", err)
+		return nil, fmt.Errorf("failed setting Qos: %w", err)
 	}
 
 	// declaring job queue
 	_, err = pubChan.QueueDeclare(qName, true, false, false, false, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed creating job queue: %v", err)
+		return nil, fmt.Errorf("failed creating job queue: %w", err)
 	}
 
 	rmq := &rabbitMQManager{
@@ -135,14 +135,14 @@ func (m *rabbitMQManager) processJob(d amqp.Delivery) {
 
 	urlPathStr := string(d.Body)
 
-	log.Debug("received job:", urlPathStr)
+	log.Debugf("Received job: %s", urlPathStr)
 
 	urlPath := strings.Split(urlPathStr, "::")
 
 	err := m.wc.Save(urlPath[0], urlPath[1])
 
 	if err != nil {
-		log.Error("Saving screenshot failed", err)
+		log.Errorf("Saving screenshot failed: %v", err)
 
 		// TODO: retry this or push to a failed jobs queue
 
