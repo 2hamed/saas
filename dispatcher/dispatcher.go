@@ -64,42 +64,52 @@ func (d *dispatcher) FetchResult(url string) (string, error) {
 }
 
 func (d *dispatcher) listenForResults() {
-
 	go func() {
 		for {
 			select {
 			case result := <-d.q.FinishChan():
-				log.Debug("Received finish signal for", result)
 
-				if d.fs != nil {
-					remoteUrl, err := d.fs.Store(result[1])
+				log.Debugf("Received finish signal for: %v", result)
 
-					if err != nil {
-						log.Errorf("failed to store file in filestore: %v", err)
-					} else {
-						err = d.ds.UpdatePath(result[0], remoteUrl)
-						if err != nil {
-							log.Errorf("failed to update path for url: %v", err)
-						}
-					}
-				}
+				d.processFinishSignal(result)
 
-				err := d.ds.SetFinished(result[0])
-
-				if err != nil {
-					log.Error("failed to update status for ", result, err)
-				}
 			case result := <-d.q.FailChan():
-				log.Debug("Received fail signal for ", result)
 
-				err := d.ds.SetFailed(result[0])
+				log.Debugf("Received fail signal for: %v", result)
 
-				if err != nil {
-					log.Error("failed to set failed for", result, err)
-				}
+				d.processFailSignal(result)
 			}
 		}
 	}()
+}
+
+func (d *dispatcher) processFinishSignal(result []string) {
+	if d.fs != nil {
+		remoteURL, err := d.fs.Store(result[1])
+
+		if err != nil {
+			log.Errorf("failed to store file in filestore: %v", err)
+		} else {
+			err = d.ds.UpdatePath(result[0], remoteURL)
+			if err != nil {
+				log.Errorf("failed to update path for url: %v", err)
+			}
+		}
+	}
+
+	err := d.ds.SetFinished(result[0])
+
+	if err != nil {
+		log.Error("failed to update status for ", result, err)
+	}
+}
+
+func (d *dispatcher) processFailSignal(result []string) {
+	err := d.ds.SetFailed(result[0])
+
+	if err != nil {
+		log.Error("failed to set failed for", result, err)
+	}
 }
 
 func hash(url string) string {
