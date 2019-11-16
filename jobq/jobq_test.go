@@ -16,6 +16,7 @@ func (m *mockCapture) Save(url string, destination string) error {
 	return m.saveErr
 }
 func TestJobQFinish(t *testing.T) {
+
 	if testing.Short() {
 		t.Skip("Skipping test in short mode")
 	}

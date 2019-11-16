@@ -166,6 +166,12 @@ func (m *rabbitMQManager) processJob(d amqp.Delivery) {
 
 	urlPath := strings.Split(urlPathStr, "::")
 
+	if len(urlPath) != 2 {
+		log.Errorf("Invalid job received, skipping --> [%v]", urlPath)
+		d.Reject(false)
+		return
+	}
+
 	err := m.wc.Save(urlPath[0], urlPath[1])
 
 	if err != nil {
