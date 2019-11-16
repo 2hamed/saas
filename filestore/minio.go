@@ -18,13 +18,17 @@ const (
 )
 
 var (
-	minioHost string
-	minioPort string
+	minioHost      string
+	minioPort      string
+	minioAccessKey string
+	minioSecretKey string
 )
 
 func initConfig() {
 	minioHost = os.Getenv("MINIO_HOST")
 	minioPort = os.Getenv("MINIO_PORT")
+	minioAccessKey = os.Getenv("MINIO_ACCESSKEY")
+	minioSecretKey = os.Getenv("MINIO_SECRET")
 }
 
 func createMinio() (*minioFileStore, error) {
@@ -38,12 +42,8 @@ func createMinio() (*minioFileStore, error) {
 	log.Infof("Connecting to Minio on %s:%s", minioHost, minioPort)
 
 	endpoint := fmt.Sprintf("%s:%s", minioHost, minioPort)
-	accessKeyID := os.Getenv("MINIO_ACCESSKEY")
-	secretAccessKey := os.Getenv("MINIO_SECRET")
 
-	useSSL := false
-
-	client, err := minio.New(endpoint, accessKeyID, secretAccessKey, useSSL)
+	client, err := minio.New(endpoint, minioAccessKey, minioSecretKey, false)
 	if err != nil {
 		return nil, err
 	}
