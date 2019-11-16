@@ -24,6 +24,7 @@ services:
       - MINIO_PORT=9000
       - MINIO_ACCESSKEY=miniokey
       - MINIO_SECRET=miniosecret
+      - WORKERS_PER_INSTANCE=3
     volumes:
       - shots:/mnt/shots
     depends_on:

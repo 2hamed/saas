@@ -3,6 +3,7 @@ package jobq
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -20,6 +21,8 @@ var (
 	rabbitMQPort string
 	rabbitMQUser string
 	rabbitMQPass string
+
+	workersPerInstance int
 )
 
 func initConfig() {
@@ -27,6 +30,25 @@ func initConfig() {
 	rabbitMQPort = os.Getenv("RABBITMQ_PORT")
 	rabbitMQUser = os.Getenv("RABBITMQ_USER")
 	rabbitMQPass = os.Getenv("RABBITMQ_PASS")
+
+	var err error
+	workersPerInstance, err = strconv.Atoi(os.Getenv("WORKERS_PER_INSTANCE"))
+
+	// if it's not set or invalid, set it to 3
+	if err != nil {
+		workersPerInstance = 3
+	}
+
+	// if it's less than 1 set it to 1
+	if workersPerInstance < 0 {
+		workersPerInstance = 1
+	}
+
+	// if it's more than 10 set it to 10
+	// we don't want to overload the instance
+	if workersPerInstance > 10 {
+		workersPerInstance = 10
+	}
 }
 
 func createRabbitMQConnection() (*amqp.Connection, error) {
@@ -57,7 +79,8 @@ func createRabbitMQ(wc webCapture, conn *amqp.Connection) (*rabbitMQManager, err
 		return nil, fmt.Errorf("failed creating consumer channel: %w", err)
 	}
 
-	err = consumerChan.Qos(1, 0, true)
+	// tell RabbitMQ to buffer this much messages
+	err = consumerChan.Qos(workersPerInstance, 0, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed setting Qos: %w", err)
 	}
@@ -79,7 +102,9 @@ func createRabbitMQ(wc webCapture, conn *amqp.Connection) (*rabbitMQManager, err
 		stopChan: make(chan struct{}),
 	}
 
-	rmq.startConsumer()
+	for i := 0; i < workersPerInstance; i++ {
+		rmq.startConsumer()
+	}
 
 	return rmq, nil
 }
@@ -121,11 +146,13 @@ func (m *rabbitMQManager) startConsumer() {
 	// There could more than one consumers (worker) for jobs to
 	// to process jobs
 	go func() {
+		log.Debug("Starting a worker to process jobs")
 		for {
 			select {
 			case d := <-consumChan:
 				m.processJob(d)
 			case <-m.stopChan:
+				// this is it guys, stop listening on channel
 				return
 			}
 		}
