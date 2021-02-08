@@ -1,4 +1,4 @@
-package screenshot
+package main
 
 import (
 	"os"

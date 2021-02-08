@@ -1,0 +1,15 @@
+syntax = "proto3";
+option go_package = "github.com/2hamed/saas/protobuf";
+service Capture{
+    rpc Capture(CaptureRequest) returns (CaptureResponse){}
+}
+
+message CaptureRequest{
+    string uuid = 1;
+    string url = 2;
+}
+
+message CaptureResponse{
+    string uuid = 1;
+    string objectPath = 2;
+}
