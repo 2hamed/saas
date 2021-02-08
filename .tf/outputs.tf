@@ -17,3 +17,7 @@ output "kubernetes_cluster_host" {
   value       = google_container_cluster.primary.endpoint
   description = "GKE Cluster Host"
 }
+
+output "storage_url" {
+  value = google_storage_bucket.capture_storage.url
+}
