@@ -1,10 +1,11 @@
-package jobq
+package odin
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/2hamed/saas/waitfor"
@@ -68,7 +69,7 @@ func createRabbitMQConnection() (*amqp.Connection, error) {
 	return conn, nil
 }
 
-func createRabbitMQ(wc webCapture, conn *amqp.Connection) (*rabbitMQManager, error) {
+func createRabbitMQ(conn *amqp.Connection) (*rabbitMQManager, error) {
 	pubChan, err := conn.Channel()
 	if err != nil {
 		return nil, fmt.Errorf("failed creating pub channel: %w", err)
@@ -92,18 +93,7 @@ func createRabbitMQ(wc webCapture, conn *amqp.Connection) (*rabbitMQManager, err
 	}
 
 	rmq := &rabbitMQManager{
-		qCon:         conn,
-		pubChan:      pubChan,
-		consumerChan: consumerChan,
-		wc:           wc,
-		finishChan:   make(chan []string, 100),
-		failChan:     make(chan []string, 100),
-
-		stopChan: make(chan struct{}),
-	}
-
-	for i := 0; i < workersPerInstance; i++ {
-		rmq.startConsumer()
+		qCon: conn,
 	}
 
 	return rmq, nil
@@ -111,86 +101,51 @@ func createRabbitMQ(wc webCapture, conn *amqp.Connection) (*rabbitMQManager, err
 
 type rabbitMQManager struct {
 	qCon *amqp.Connection
-
-	pubChan      *amqp.Channel
-	consumerChan *amqp.Channel
-
-	wc webCapture
-
-	finishChan chan []string
-	failChan   chan []string
-
-	stopChan chan struct{}
 }
 
-func (m *rabbitMQManager) Enqueue(url string, destination string) error {
-	return m.pubChan.Publish("", qName, false, false, amqp.Publishing{
+func (m *rabbitMQManager) Enqueue(ctx context.Context, job CaptureJob) error {
+	qChan, err := m.qCon.Channel()
+	if err != nil {
+		return err
+	}
+	defer qChan.Close()
+
+	bytes, _ := json.Marshal(job)
+
+	return qChan.Publish("", qName, false, false, amqp.Publishing{
 		ContentType: "text/plain",
-		Body:        []byte(fmt.Sprintf("%s::%s", url, destination)),
+		Body:        bytes,
 	})
 }
-
-func (m *rabbitMQManager) FinishChan() <-chan []string {
-	return m.finishChan
-}
-
-func (m *rabbitMQManager) FailChan() <-chan []string {
-	return m.failChan
-}
-
-func (m *rabbitMQManager) startConsumer() {
-	consumChan, err := m.consumerChan.Consume(qName, "", false, false, false, false, nil)
+func (m *rabbitMQManager) GetJobChan(ctx context.Context) (<-chan CaptureJob, error) {
+	qChan, err := m.qCon.Channel()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	// There could more than one consumers (worker) for jobs to
-	// to process jobs
+	delivery, err := qChan.Consume(qName, "", true, false, false, false, nil)
+	if err != nil {
+		return nil, err
+	}
+	jobChan := make(chan CaptureJob)
 	go func() {
-		log.Debug("Starting a worker to process jobs")
 		for {
 			select {
-			case d := <-consumChan:
-				m.processJob(d)
-			case <-m.stopChan:
-				// this is it guys, stop listening on channel
-				return
+			case <-ctx.Done():
+				close(jobChan)
+				qChan.Close()
+			case d := <-delivery:
+				var job CaptureJob
+				err := json.Unmarshal(d.Body, &job)
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				jobChan <- job
 			}
 		}
 	}()
+	return jobChan, nil
 }
-func (m *rabbitMQManager) processJob(d amqp.Delivery) {
-
-	urlPathStr := string(d.Body)
-
-	log.Debugf("Received job: %s", urlPathStr)
-
-	urlPath := strings.Split(urlPathStr, "::")
-
-	if len(urlPath) != 2 {
-		log.Errorf("Invalid job received, skipping --> [%v]", urlPath)
-		d.Reject(false)
-		return
-	}
-
-	err := m.wc.Save(urlPath[0], urlPath[1])
-
-	if err != nil {
-		log.Errorf("Saving screenshot failed: %v", err)
-
-		// TODO: retry this or push to a failed jobs queue
-
-		m.failChan <- urlPath
-		d.Nack(false, false)
-	} else {
-		m.finishChan <- urlPath
-		d.Ack(false)
-	}
-
-}
-
 func (m *rabbitMQManager) CleanUp() {
-	m.stopChan <- struct{}{}
-	m.pubChan.Close()
-	m.consumerChan.Close()
 	m.qCon.Close()
 }
