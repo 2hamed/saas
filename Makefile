@@ -5,4 +5,9 @@ proto:
 
 
 image-thor:
-	docker build -t thor -f .docker/capture.Dockerfile .
+	docker build -t thor -f .docker/thor.Dockerfile .
+
+image-huginn:
+	docker build -t huginn -f .docker/huginn.Dockerfile .
+image-muninn:
+	docker build -t muninn -f .docker/muninn.Dockerfile .
