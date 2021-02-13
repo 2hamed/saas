@@ -1,18 +1,18 @@
 FROM golang AS build
 
-WORKDIR /app
+COPY . /src
 
-COPY . /app
+WORKDIR /src
 
-RUN go build -o ./thor ./capture
+RUN go build -o /app/thor ./thor
 
 FROM ubuntu:latest
 
 RUN apt update
 RUN apt install -y libfontconfig bzip2 ca-certificates
 
-COPY ./capture/phantomjs/phantomjs /app/phantomjs
-COPY ./capture/phantomjs/capture.js /app/capture.js
+COPY ./thor/phantomjs/phantomjs /app/phantomjs
+COPY ./thor/phantomjs/capture.js /app/capture.js
 
 ENV PHANTOMJS_PATH=/app/phantomjs
 ENV CAPTUREJS_PATH=/app/capture.js
