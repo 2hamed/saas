@@ -1,23 +1,30 @@
-package jobq
+package odin
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
+
+type CaptureJob struct {
+	UUID string `json:"uuid"`
+	URL  string `json:"url"`
+}
 
 // QManager is the interface used by other components to push to job queue
 type QManager interface {
-	Enqueue(url string, destination string) error
+	Enqueue(ctx context.Context, job CaptureJob) error
 
-	FinishChan() <-chan []string
-	FailChan() <-chan []string
+	GetJobChan(ctx context.Context) (<-chan CaptureJob, error)
 
 	CleanUp()
 }
 
 // NewQManager returns an implementation of QManager
-func NewQManager(webCapture webCapture) (QManager, error) {
+func NewQManager() (QManager, error) {
 	conn, err := createRabbitMQConnection()
 	if err != nil {
 		return nil, fmt.Errorf("failed connecting to rabbitmq instance: %w", err)
 	}
 
-	return createRabbitMQ(webCapture, conn)
+	return createRabbitMQ(conn)
 }

@@ -8,6 +8,7 @@ require (
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/protobuf v1.4.3
 	github.com/golang/snappy v0.0.1 // indirect
+	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.7.3
 	github.com/minio/minio-go/v6 v6.0.41
 	github.com/sirupsen/logrus v1.4.2
@@ -19,7 +20,7 @@ require (
 	go.mongodb.org/mongo-driver v1.1.3
 	go.opencensus.io v0.22.6 // indirect
 	golang.org/x/oauth2 v0.0.0-20210201163806-010130855d6c // indirect
-	google.golang.org/api v0.39.0 // indirect
+	google.golang.org/api v0.39.0
 	google.golang.org/genproto v0.0.0-20210207032614-bba0dbe2a9ea // indirect
 	google.golang.org/grpc v1.35.0
 	google.golang.org/protobuf v1.25.0

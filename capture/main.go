@@ -12,8 +12,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-const port = ":50005"
-
 type server struct {
 	pb.CaptureServer
 
@@ -21,11 +19,12 @@ type server struct {
 }
 
 func (s *server) Capture(ctx context.Context, in *pb.CaptureRequest) (*pb.CaptureResponse, error) {
-	// s.capture.Save(in.Url)
+
 	return nil, nil
 }
 
 func main() {
+	port := os.Getenv("GRPC_LISTEN_PORT")
 
 	serviceAccountFile := os.Getenv("GCP_SERVICE_ACCOUNT_FILE_PATH")
 	stoageClient, err := storage.NewClient(context.Background(), option.WithServiceAccountFile(serviceAccountFile))
