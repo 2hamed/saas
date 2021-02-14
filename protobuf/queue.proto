@@ -1,0 +1,13 @@
+syntax = "proto3";
+option go_package = "github.com/2hamed/saas/protobuf";
+service Queue{
+    rpc Capture(QueueRequest) returns (QueueResponse){}
+}
+
+message QueueRequest{
+    string url = 1;
+}
+
+message QueueResponse{
+    string uuid = 1;
+}
