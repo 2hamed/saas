@@ -9,7 +9,7 @@ import (
 	"os/exec"
 
 	"cloud.google.com/go/storage"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 // Capture is the interface to capture the screenshot
@@ -28,14 +28,14 @@ type phantomJs struct {
 }
 
 func (p phantomJs) Save(ctx context.Context, url string) (string, error) {
-	log.Debugf("Capture initiated for %s", url)
+	log.Info().Str("url", url).Msg("Capture initiated for")
 
 	hash := md5.Sum([]byte(url))
-	path := "/tmp/" + string(hash[:])
+	path := fmt.Sprintf("/tmp/%x.png", hash)
 
 	cmd := exec.Command(os.Getenv("PHANTOMJS_PATH"), os.Getenv("CAPTUREJS_PATH"), url, path)
 
-	log.Debugf("Executing %s", cmd.String())
+	log.Debug().Str("cmd", cmd.String()).Msg("Capture excuting")
 
 	output, err := cmd.CombinedOutput()
 
@@ -43,16 +43,19 @@ func (p phantomJs) Save(ctx context.Context, url string) (string, error) {
 		return "", fmt.Errorf("error capturing screenshot: %s (%w)", output, err)
 	}
 
-	objectName := string(hash[:]) + ".png"
+	objectName := fmt.Sprintf("%x.png", hash)
 	return objectName, p.uploadToStorage(ctx, path, objectName)
 }
 func (p phantomJs) uploadToStorage(ctx context.Context, path, name string) error {
-	w := p.storageClient.Bucket(p.bucketName).Object(name).NewWriter(ctx)
-
 	f, err := os.OpenFile(path, os.O_RDONLY, os.FileMode(755))
 	if err != nil {
 		return err
 	}
+	defer f.Close()
+
+	w := p.storageClient.Bucket(p.bucketName).Object(name).NewWriter(ctx)
+	defer w.Close()
+
 	_, err = io.Copy(w, f)
 	return err
 

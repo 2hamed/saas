@@ -2,16 +2,16 @@ package main
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"net"
+	"os"
 
 	odin "github.com/2hamed/saas/odin"
 	pb "github.com/2hamed/saas/protobuf"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 )
-
-const port = ":50005"
 
 type server struct {
 	pb.QueueServer
@@ -29,21 +29,23 @@ func (s *server) Capture(ctx context.Context, in *pb.QueueRequest) (*pb.QueueRes
 }
 
 func main() {
+	port := os.Getenv("GRPC_LISTEN_PORT")
 
-	lis, err := net.Listen("tcp", port)
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.Fatal().Err(err).Msg("failed to listen")
 	}
 
 	qManager, err := odin.NewQManager()
 	if err != nil {
-		log.Fatalf("failed creating queue manger: %v", err)
+		log.Fatal().Err(err).Msg("failed creating queue manger")
 	}
 
 	s := grpc.NewServer()
 	pb.RegisterQueueServer(s, &server{q: qManager})
 
+	log.Info().Msgf("GRPC Server listening on port %s", port)
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		log.Fatal().Err(err).Msg("failed to serve")
 	}
 }

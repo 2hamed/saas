@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/2hamed/saas/waitfor"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"github.com/streadway/amqp"
 )
 
@@ -32,24 +31,6 @@ func initConfig() {
 	rabbitMQUser = os.Getenv("RABBITMQ_USER")
 	rabbitMQPass = os.Getenv("RABBITMQ_PASS")
 
-	var err error
-	workersPerInstance, err = strconv.Atoi(os.Getenv("WORKERS_PER_INSTANCE"))
-
-	// if it's not set or invalid, set it to 3
-	if err != nil {
-		workersPerInstance = 3
-	}
-
-	// if it's less than 1 set it to 1
-	if workersPerInstance < 0 {
-		workersPerInstance = 1
-	}
-
-	// if it's more than 10 set it to 10
-	// we don't want to overload the instance
-	if workersPerInstance > 10 {
-		workersPerInstance = 10
-	}
 }
 
 func createRabbitMQConnection() (*amqp.Connection, error) {
@@ -60,7 +41,7 @@ func createRabbitMQConnection() (*amqp.Connection, error) {
 		fmt.Sprintf("%s:%s", rabbitMQHost, rabbitMQPort),
 	}, 60*time.Second)
 
-	log.Infof("Conncting to RabbitMQ on %s:%s", rabbitMQHost, rabbitMQPort)
+	log.Info().Msgf("Conncting to RabbitMQ on %s:%s", rabbitMQHost, rabbitMQPort)
 
 	conn, err := amqp.Dial(fmt.Sprintf("amqp://%s:%s@%s:%s/", rabbitMQUser, rabbitMQPass, rabbitMQHost, rabbitMQPort))
 	if err != nil {
@@ -122,7 +103,7 @@ func (m *rabbitMQManager) GetJobChan(ctx context.Context) (<-chan CaptureJob, er
 	if err != nil {
 		return nil, err
 	}
-	delivery, err := qChan.Consume(qName, "", true, false, false, false, nil)
+	delivery, err := qChan.Consume(qName, "", false, false, false, false, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -137,8 +118,14 @@ func (m *rabbitMQManager) GetJobChan(ctx context.Context) (<-chan CaptureJob, er
 				var job CaptureJob
 				err := json.Unmarshal(d.Body, &job)
 				if err != nil {
-					log.Error(err)
+					log.Error().Bytes("body", d.Body).Err(err).Msg("invalid job")
 					continue
+				}
+				job.Ack = func() {
+					d.Ack(false)
+				}
+				job.Nack = func() {
+					d.Nack(false, false)
 				}
 				jobChan <- job
 			}

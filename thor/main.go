@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"net"
 	"os"
 
 	"cloud.google.com/go/storage"
 	pb "github.com/2hamed/saas/protobuf"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 )
@@ -19,8 +20,15 @@ type server struct {
 }
 
 func (s *server) Capture(ctx context.Context, in *pb.CaptureRequest) (*pb.CaptureResponse, error) {
+	objectPath, err := s.capture.Save(ctx, in.Url)
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	return &pb.CaptureResponse{
+		Uuid:       in.Uuid,
+		ObjectPath: objectPath,
+	}, nil
 }
 
 func main() {
@@ -38,9 +46,9 @@ func main() {
 		panic(err)
 	}
 
-	lis, err := net.Listen("tcp", port)
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.Fatal().Err(err).Msg("failed to listen")
 	}
 
 	s := grpc.NewServer()
@@ -48,7 +56,8 @@ func main() {
 		capture: capture,
 	})
 
+	log.Info().Msgf("GRPC Server listening on port %s", port)
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		log.Fatal().Err(err).Msg("failed to serve")
 	}
 }
