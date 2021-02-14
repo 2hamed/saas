@@ -6,8 +6,14 @@ proto:
 
 image-thor:
 	docker build -t thor -f .docker/thor.Dockerfile .
-
 image-huginn:
 	docker build -t huginn -f .docker/huginn.Dockerfile .
 image-muninn:
 	docker build -t muninn -f .docker/muninn.Dockerfile .
+image-heimdall:
+	docker build -t heimdall -f .docker/heimdall.Dockerfile .
+
+images: image-thor image-huginn image-muninn image-heimdall
+
+up:
+	docker-compose up -d

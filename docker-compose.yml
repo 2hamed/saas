@@ -1,55 +1,41 @@
 version: "3"
 services:
-  nginx:
-    build: ./.nginx
-    volumes:
-      - shots:/mnt/shots
-    ports:
-      - 80:80
-    depends_on:
-      - capture
-
-  capture:
-    build: ./
-    environment:
-      - LOG_LEVEL=debug
-      - RABBITMQ_HOST=queue
-      - RABBITMQ_PORT=5672
-      - RABBITMQ_USER=guest
-      - RABBITMQ_PASS=guest
-      - MONGO_HOST=db
-      - MONGO_PORT=27017
-      - STORAGE_PATH=/mnt/shots
-      - MINIO_HOST=minio
-      - MINIO_PORT=9000
-      - MINIO_ACCESSKEY=miniokey
-      - MINIO_SECRET=miniosecret
-      - WORKERS_PER_INSTANCE=3
-    volumes:
-      - shots:/mnt/shots
-    depends_on:
-      - queue
-      - db
-
-  queue:
+  rabbit:
     image: rabbitmq:3-management
     ports:
       - 5672:5672
       - 15672:15672
 
-  db:
-    image: mongo
-    ports:
-      - 27017:27017
-
-  minio:
-    image: minio/minio
-    command: "server /data"
-    ports:
-      - 9000:9000
+  heimdall:
+    image: heimdall
     environment:
-      - MINIO_ACCESS_KEY=miniokey
-      - MINIO_SECRET_KEY=miniosecret
+      - HTTP_LISTEN_PORT=80
+      - QUEUE_GRPC_ADDRESS=huginn:5000
+    ports:
+      - 8080:80
 
-volumes:
-  shots:
+  huginn:
+    image: huginn
+    environment:
+      - GRPC_LISTEN_PORT=5000
+      - RABBITMQ_HOST=rabbit
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASS=guest
+
+  muninn:
+    image: muninn
+    environment:
+      - CAPTURE_GRPC_ADDRESS=thor:5000
+      - RABBITMQ_HOST=rabbit
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASS=guest
+  thor:
+    image: thor
+    volumes:
+      - ./gcloud-config.json:/app/gcloud-config.json
+    environment:
+      - GRPC_LISTEN_PORT=5000
+      - GCP_SERVICE_ACCOUNT_FILE_PATH=/app/gcloud-config.json
+      - GCP_STORAGE_BUCKET_NAME=capture.2hamed.nl

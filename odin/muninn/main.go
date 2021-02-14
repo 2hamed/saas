@@ -2,18 +2,14 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
+	"time"
 
 	odin "github.com/2hamed/saas/odin"
 	pb "github.com/2hamed/saas/protobuf"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
-)
-
-const (
-	address     = "localhost:50051"
-	defaultName = "world"
 )
 
 type muninn struct {
@@ -23,26 +19,28 @@ type muninn struct {
 
 func main() {
 
+	address := os.Getenv("CAPTURE_GRPC_ADDRESS")
+
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		log.Fatal().Err(err).Msg("did not connect")
 	}
 	defer conn.Close()
 
 	grpcClient := pb.NewCaptureClient(conn)
 	qManager, err := odin.NewQManager()
 	if err != nil {
-		log.Fatalf("failed to create q manager: %v", err)
+		log.Fatal().Err(err).Msg("failed to create q manager")
 	}
 
-	log.Println("Muninn is waiting for jobs...")
+	log.Info().Msg("Muninn is waiting for jobs...")
 	muninn := &muninn{
 		q:          qManager,
 		grpcClient: grpcClient,
 	}
 	muninn.Start()
 
-	log.Println("Shutting down...")
+	log.Info().Msg("Shutting down...")
 
 }
 
@@ -64,10 +62,20 @@ loop:
 		case <-sigChan:
 			break loop
 		case job := <-jobChan:
-			m.grpcClient.Capture(ctx, &pb.CaptureRequest{
+			ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+			log.Info().Str("url", job.URL).Str("uuid", job.UUID).Msg("Received job")
+			resp, err := m.grpcClient.Capture(ctx, &pb.CaptureRequest{
 				Uuid: job.UUID,
 				Url:  job.URL,
 			})
+			if err != nil {
+				log.Error().Err(err).Msg("Error making capture")
+				job.Nack()
+			} else {
+				log.Info().Str("object_path", resp.ObjectPath).Str("uuid", resp.Uuid).Msg("Screenshot successfully captured!")
+				job.Ack()
+			}
+			cancel()
 		}
 	}
 

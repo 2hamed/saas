@@ -5,12 +5,14 @@ go 1.12
 require (
 	cloud.google.com/go v0.76.0 // indirect
 	cloud.google.com/go/storage v1.13.0
+	github.com/go-chi/chi v1.5.2
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/protobuf v1.4.3
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.7.3
 	github.com/minio/minio-go/v6 v6.0.41
+	github.com/rs/zerolog v1.20.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271
 	github.com/stretchr/testify v1.6.1
