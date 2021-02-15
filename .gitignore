@@ -2,3 +2,4 @@ requirements.pdf
 .DS_Store
 .env
 /vendor
+gcloud-config.json
