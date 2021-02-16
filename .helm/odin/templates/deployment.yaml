@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "odin.fullname" . }}
+  labels:
+    {{- include "odin.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "odin.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "odin.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "odin.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: huginn
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.huginn.repository }}:{{ .Values.image.huginn.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.huginn.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: GRPC_LISTEN_PORT
+              value: "5000"
+            - name: RABBITMQ_HOST
+              value: "127.0.0.1"
+            - name: RABBITMQ_PORT
+              value: "5672"
+            - name: RABBITMQ_USER
+              value: guest
+            - name: RABBITMQ_PASS
+              value: guest
+        - name: muninn
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }} 
+          image: "{{ .Values.image.huginn.repository }}:{{ .Values.image.huginn.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.huginn.pullPolicy }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }} 
+          env:
+            - name: CAPTURE_GRPC_ADDRESS
+              value: thor:5000
+            - name: RABBITMQ_HOST
+              value: "127.0.0.1"
+            - name: RABBITMQ_PORT
+              value: "5672"
+            - name: RABBITMQ_USER
+              value: guest
+            - name: RABBITMQ_PASS
+              value: guest
+        - name: rabbit
+          image: "{{ .Values.image.rabbit.repository }}:{{ .Values.image.rabbit.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.rabbit.pullPolicy }}
+          ports:
+            - name: amqp
+              containerPort: 5672
+              protocol: TCP
+            - name: admin
+              containerPort: 15672
+              protocol: TCP
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
