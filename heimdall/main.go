@@ -2,22 +2,25 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
 	pb "github.com/2hamed/saas/protobuf"
 	"github.com/go-chi/chi"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 )
 
 func main() {
+	log.Logger = log.Level(zerolog.InfoLevel)
+
 	listenHostPort := fmt.Sprintf(":%s", os.Getenv("HTTP_LISTEN_PORT"))
 	address := os.Getenv("QUEUE_GRPC_ADDRESS")
 
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		log.Fatal().Err(err).Msg("grpc client did not connect")
 	}
 	defer conn.Close()
 
@@ -29,9 +32,9 @@ func main() {
 
 	r.Post("/", h.NewJob)
 
-	log.Println("HTTP server listening on", listenHostPort)
+	log.Info().Msgf("HTTP server listening on: %s", listenHostPort)
 
 	if err := http.ListenAndServe(listenHostPort, r); err != nil {
-		log.Fatalf("HTTP server failed to listen: %v", err)
+		log.Fatal().Err(err).Msg("HTTP server failed to listen")
 	}
 }

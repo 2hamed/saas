@@ -8,6 +8,7 @@ import (
 
 	odin "github.com/2hamed/saas/odin"
 	pb "github.com/2hamed/saas/protobuf"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 )
@@ -19,6 +20,7 @@ type muninn struct {
 
 func main() {
 
+	log.Logger = log.Level(zerolog.InfoLevel)
 	address := os.Getenv("CAPTURE_GRPC_ADDRESS")
 
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())

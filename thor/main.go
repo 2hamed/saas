@@ -8,6 +8,7 @@ import (
 
 	"cloud.google.com/go/storage"
 	pb "github.com/2hamed/saas/protobuf"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
@@ -32,6 +33,7 @@ func (s *server) Capture(ctx context.Context, in *pb.CaptureRequest) (*pb.Captur
 }
 
 func main() {
+	log.Logger = log.Level(zerolog.InfoLevel)
 	port := os.Getenv("GRPC_LISTEN_PORT")
 
 	serviceAccountFile := os.Getenv("GCP_SERVICE_ACCOUNT_FILE_PATH")

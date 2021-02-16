@@ -9,6 +9,7 @@ import (
 	odin "github.com/2hamed/saas/odin"
 	pb "github.com/2hamed/saas/protobuf"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 )
@@ -29,6 +30,8 @@ func (s *server) Capture(ctx context.Context, in *pb.QueueRequest) (*pb.QueueRes
 }
 
 func main() {
+
+	log.Logger = log.Level(zerolog.InfoLevel)
 	port := os.Getenv("GRPC_LISTEN_PORT")
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
