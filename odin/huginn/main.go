@@ -30,8 +30,9 @@ func (s *server) Capture(ctx context.Context, in *pb.QueueRequest) (*pb.QueueRes
 }
 
 func main() {
-
 	log.Logger = log.Level(zerolog.InfoLevel)
+	log.Info().Msg("Starting Huginn...")
+
 	port := os.Getenv("GRPC_LISTEN_PORT")
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))

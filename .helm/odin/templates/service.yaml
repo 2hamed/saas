@@ -4,12 +4,14 @@ metadata:
   name: huginn
   labels:
     {{- include "odin.labels" . | nindent 4 }}
+    app: huginn
 spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: http
+      targetPort: grpc
       protocol: TCP
-      name: http
+      name: grpc
   selector:
     {{- include "odin.selectorLabels" . | nindent 4 }}
+    app: huginn

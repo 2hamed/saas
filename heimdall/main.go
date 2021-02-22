@@ -14,6 +14,7 @@ import (
 
 func main() {
 	log.Logger = log.Level(zerolog.InfoLevel)
+	log.Info().Msg("Starting Heimdall...")
 
 	listenHostPort := fmt.Sprintf(":%s", os.Getenv("HTTP_LISTEN_PORT"))
 	address := os.Getenv("QUEUE_GRPC_ADDRESS")
@@ -30,11 +31,16 @@ func main() {
 
 	r := chi.NewRouter()
 
-	r.Post("/", h.NewJob)
+	r.Get("/", serveHome)
+	r.Post("/c", h.NewJob)
 
 	log.Info().Msgf("HTTP server listening on: %s", listenHostPort)
 
 	if err := http.ListenAndServe(listenHostPort, r); err != nil {
 		log.Fatal().Err(err).Msg("HTTP server failed to listen")
 	}
+}
+func serveHome(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(200)
+	w.Write([]byte("Hello! I am Heimdall!"))
 }

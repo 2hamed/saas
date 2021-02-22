@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: muninn
+  labels:
+    {{- include "odin.labels" . | nindent 4 }}
+    app: muninn
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "odin.selectorLabels" . | nindent 6 }}
+      app: muninn
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "odin.selectorLabels" . | nindent 8 }}
+        app: muninn
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "odin.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: muninn
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }} 
+          image: "{{ .Values.image.muninn.repository }}:{{ .Values.image.muninn.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.muninn.pullPolicy }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }} 
+          env:
+            - name: CAPTURE_GRPC_ADDRESS
+              value: thor.default.svc:5000
+            - name: RABBITMQ_HOST
+              value: rabbit-rabbitmq.default.svc
+            - name: RABBITMQ_PORT
+              value: "5672"
+            - name: RABBITMQ_USER
+              value: user
+            - name: RABBITMQ_PASS
+              value: 6ODpLMPOkD
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

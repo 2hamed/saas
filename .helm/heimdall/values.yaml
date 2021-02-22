@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: gcr.io/cloud-voyage/heimdall
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
@@ -37,7 +37,7 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
-  type: ClusterIP
+  type: NodePort
   port: 80
 
 ingress:
@@ -79,5 +79,5 @@ tolerations: []
 affinity: {}
 
 env:
-  httpListenPort: 80
-  queueGrpcAddr: huginn:5000
+  httpListenPort: 8080
+  queueGrpcAddr: huginn.default.svc:5000

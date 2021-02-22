@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: gcr.io/cloud-voyage/thor
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
@@ -38,7 +38,7 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  port: 80
+  port: 5000
 
 ingress:
   enabled: false
@@ -79,7 +79,7 @@ tolerations: []
 affinity: {}
 
 env:
-  grpcListenPort: 80
+  grpcListenPort: 5000
   gcp:
     storageBucket: capture.2hamed.nl
     credentials: ""

@@ -7,19 +7,14 @@ replicaCount: 1
 image:
   muninn:
     repository: gcr.io/cloud-voyage/muninn
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
     # Overrides the image tag whose default is the chart appVersion.
     tag: "latest"
   huginn:
-    repository: gcr.io/cloud-voyage/muninn
-    pullPolicy: IfNotPresent
+    repository: gcr.io/cloud-voyage/huginn
+    pullPolicy: Always
     # Overrides the image tag whose default is the chart appVersion.
     tag: "latest"
-  rabbit:
-    repository: rabbitmq
-    pullPolicy: IfNotPresent
-    # Overrides the image tag whose default is the chart appVersion.
-    tag: "3-management"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -49,7 +44,7 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  port: 80
+  port: 5000
 
 ingress:
   enabled: false
@@ -88,3 +83,6 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+env:
+  grpcListenPort: 5000

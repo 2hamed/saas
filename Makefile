@@ -20,7 +20,7 @@ images: image-thor image-huginn image-muninn image-heimdall
 up:
 	docker-compose up -d
 
-image-push:
+push:
 	docker push $(IMAGE_REGISTRY)/thor
 	docker push $(IMAGE_REGISTRY)/huginn
 	docker push $(IMAGE_REGISTRY)/muninn

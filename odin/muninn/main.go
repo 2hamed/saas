@@ -19,8 +19,9 @@ type muninn struct {
 }
 
 func main() {
-
 	log.Logger = log.Level(zerolog.InfoLevel)
+	log.Info().Msg("Starting Muninn...")
+
 	address := os.Getenv("CAPTURE_GRPC_ADDRESS")
 
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())

@@ -34,8 +34,8 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - name: http
-              containerPort: 80
+            - name: grpc
+              containerPort: {{ .Values.env.grpcListenPort }}
               protocol: TCP
           env:
             - name: GRPC_LISTEN_PORT

@@ -34,6 +34,8 @@ func (s *server) Capture(ctx context.Context, in *pb.CaptureRequest) (*pb.Captur
 
 func main() {
 	log.Logger = log.Level(zerolog.InfoLevel)
+	log.Info().Msg("Starting Thor...")
+
 	port := os.Getenv("GRPC_LISTEN_PORT")
 
 	serviceAccountFile := os.Getenv("GCP_SERVICE_ACCOUNT_FILE_PATH")
