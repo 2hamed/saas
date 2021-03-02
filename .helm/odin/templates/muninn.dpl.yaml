@@ -42,13 +42,13 @@ spec:
             - name: CAPTURE_GRPC_ADDRESS
               value: thor.default.svc:5000
             - name: RABBITMQ_HOST
-              value: rabbit-rabbitmq.default.svc
+              value: {{ .Values.env.rabbitHost | quote }}
             - name: RABBITMQ_PORT
               value: "5672"
             - name: RABBITMQ_USER
-              value: user
+              value: {{ .Values.auth.username | quote }}
             - name: RABBITMQ_PASS
-              value: 6ODpLMPOkD
+              value: {{ .Values.auth.password | quote }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

@@ -86,3 +86,8 @@ affinity: {}
 
 env:
   grpcListenPort: 5000
+  rabbitHost: odin-rabbitmq.default.svc
+
+auth:
+  username: rabbitmq
+  password: rabbitpass

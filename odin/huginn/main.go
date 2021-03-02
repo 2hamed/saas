@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"time"
 
 	odin "github.com/2hamed/saas/odin"
 	pb "github.com/2hamed/saas/protobuf"
@@ -31,6 +32,9 @@ func (s *server) Capture(ctx context.Context, in *pb.QueueRequest) (*pb.QueueRes
 
 func main() {
 	log.Logger = log.Level(zerolog.InfoLevel)
+	zerolog.LevelFieldName = "severity"
+	zerolog.TimestampFieldName = "timestamp"
+	zerolog.TimeFieldFormat = time.RFC3339Nano
 	log.Info().Msg("Starting Huginn...")
 
 	port := os.Getenv("GRPC_LISTEN_PORT")

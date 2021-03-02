@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	pb "github.com/2hamed/saas/protobuf"
 	"github.com/go-chi/chi"
@@ -14,6 +15,9 @@ import (
 
 func main() {
 	log.Logger = log.Level(zerolog.InfoLevel)
+	zerolog.LevelFieldName = "severity"
+	zerolog.TimestampFieldName = "timestamp"
+	zerolog.TimeFieldFormat = time.RFC3339Nano
 	log.Info().Msg("Starting Heimdall...")
 
 	listenHostPort := fmt.Sprintf(":%s", os.Getenv("HTTP_LISTEN_PORT"))

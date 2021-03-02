@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "thor.fullname" . }}
+  name: thor
   labels:
     {{- include "thor.labels" . | nindent 4 }}
 spec:

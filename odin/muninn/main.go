@@ -20,6 +20,9 @@ type muninn struct {
 
 func main() {
 	log.Logger = log.Level(zerolog.InfoLevel)
+	zerolog.LevelFieldName = "severity"
+	zerolog.TimestampFieldName = "timestamp"
+	zerolog.TimeFieldFormat = time.RFC3339Nano
 	log.Info().Msg("Starting Muninn...")
 
 	address := os.Getenv("CAPTURE_GRPC_ADDRESS")
