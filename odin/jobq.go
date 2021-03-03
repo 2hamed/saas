@@ -9,8 +9,8 @@ type CaptureJob struct {
 	UUID string `json:"uuid"`
 	URL  string `json:"url"`
 
-	Ack  func()
-	Nack func()
+	Ack  func() `json:"-"`
+	Nack func() `json:"-"`
 }
 
 // QManager is the interface used by other components to push to job queue

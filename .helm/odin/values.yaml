@@ -89,5 +89,5 @@ env:
   rabbitHost: odin-rabbitmq.default.svc
 
 auth:
-  username: rabbitmq
+  username: rabbit
   password: rabbitpass

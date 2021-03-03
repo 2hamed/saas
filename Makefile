@@ -40,4 +40,14 @@ install-heimdall:
 	helm install heimdall .helm/heimdall
 
 install: install-thor install-odin install-heimdall
+uninstall:
+	helm uninstall $(shell helm ls -q)
 
+upgrade-odin:
+	helm upgrade odin .helm/odin --set rabbitmq.auth.username=rabbit,rabbitmq.auth.password=rabbitpass
+
+upgrade-heimdall:
+	helm upgrade heimdall .helm/heimdall
+
+upgrade-thor:
+	helm upgrade thor .helm/thor

@@ -23,11 +23,16 @@ type server struct {
 
 func (s *server) Capture(ctx context.Context, in *pb.QueueRequest) (*pb.QueueResponse, error) {
 	uuid := uuid.New()
+	log.Info().Str("url", in.GetUrl()).Str("uuid", uuid.String()).Msg("Received GRPC request")
 	err := s.q.Enqueue(ctx, odin.CaptureJob{
 		UUID: uuid.String(),
 		URL:  in.GetUrl(),
 	})
-	return &pb.QueueResponse{Uuid: uuid.String()}, err
+	if err != nil {
+		log.Error().Err(err).Msg("failed pushing job to queue")
+		return nil, fmt.Errorf("failed pushing job to queue: %w", err)
+	}
+	return &pb.QueueResponse{Uuid: uuid.String()}, nil
 }
 
 func main() {

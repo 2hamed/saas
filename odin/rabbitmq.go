@@ -87,14 +87,17 @@ type rabbitMQManager struct {
 func (m *rabbitMQManager) Enqueue(ctx context.Context, job CaptureJob) error {
 	qChan, err := m.qCon.Channel()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed creating RabbitMQ channel: %w", err)
 	}
 	defer qChan.Close()
 
-	bytes, _ := json.Marshal(job)
+	bytes, err := json.Marshal(job)
+	if err != nil {
+		return fmt.Errorf("failed marshalling job: %w", err)
+	}
 
 	return qChan.Publish("", qName, false, false, amqp.Publishing{
-		ContentType: "text/plain",
+		ContentType: "application/json",
 		Body:        bytes,
 	})
 }

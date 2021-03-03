@@ -35,6 +35,8 @@ func (h *Handler) NewJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Info().Str("url", captureRequest.URL).Msg("Received request to capture")
+
 	resp, err := h.grpcClient.Capture(context.Background(), &pb.QueueRequest{
 		Url: captureRequest.URL,
 	})

@@ -4,7 +4,7 @@ variable "gke_username" {
 }
 
 variable "gke_password" {
-  default     = "pass"
+  default     = "paspaspaspaspaspas"
   description = "gke password"
 }
 
