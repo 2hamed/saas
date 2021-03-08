@@ -8,6 +8,7 @@ import (
 
 	odin "github.com/2hamed/saas/odin"
 	pb "github.com/2hamed/saas/protobuf"
+	"github.com/2hamed/saas/trace"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
@@ -24,6 +25,10 @@ func main() {
 	zerolog.TimestampFieldName = "timestamp"
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 	log.Info().Msg("Starting Muninn...")
+
+	if err := trace.StartTracing(trace.WithName("muninn")); err != nil {
+		log.Fatal().Err(err).Msg("failed to intialize tracing")
+	}
 
 	address := os.Getenv("CAPTURE_GRPC_ADDRESS")
 
@@ -51,6 +56,8 @@ func main() {
 }
 
 func (m *muninn) Start() error {
+	defer m.q.CleanUp()
+
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, os.Interrupt, os.Kill)
 
@@ -62,29 +69,33 @@ func (m *muninn) Start() error {
 		return err
 	}
 
-loop:
 	for {
 		select {
 		case <-sigChan:
-			break loop
+			return nil
 		case job := <-jobChan:
-			ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-			log.Info().Str("url", job.URL).Str("uuid", job.UUID).Msg("Received job")
-			resp, err := m.grpcClient.Capture(ctx, &pb.CaptureRequest{
-				Uuid: job.UUID,
-				Url:  job.URL,
-			})
-			if err != nil {
-				log.Error().Err(err).Msg("Error making capture")
-				job.Nack()
-			} else {
-				log.Info().Str("object_path", resp.ObjectPath).Str("uuid", resp.Uuid).Msg("Screenshot successfully captured!")
-				job.Ack()
-			}
-			cancel()
+			m.processJob(ctx, job)
 		}
 	}
 
-	m.q.CleanUp()
-	return nil
+}
+func (m *muninn) processJob(ctx context.Context, job odin.CaptureJob) {
+	ctx, span := trace.Start(ctx, "Capture")
+	defer span.End()
+
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	log.Info().Str("trace", trace.FQDN(span)).Str("span_id", span.SpanContext().SpanID.String()).Str("url", job.URL).Str("uuid", job.UUID).Msg("Received job")
+	resp, err := m.grpcClient.Capture(ctx, &pb.CaptureRequest{
+		Uuid: job.UUID,
+		Url:  job.URL,
+	})
+	if err != nil {
+		log.Error().Err(err).Msg("Error making capture")
+		job.Nack()
+	} else {
+		log.Info().Str("object_path", resp.ObjectPath).Str("uuid", resp.Uuid).Msg("Screenshot successfully captured!")
+		job.Ack()
+	}
 }

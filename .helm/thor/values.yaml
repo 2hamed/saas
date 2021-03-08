@@ -83,3 +83,4 @@ env:
   gcp:
     storageBucket: capture.2hamed.nl
     credentials: ""
+    cloudProjectId: cloud-voyage

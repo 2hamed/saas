@@ -28,7 +28,6 @@ type phantomJs struct {
 }
 
 func (p phantomJs) Save(ctx context.Context, url string) (string, error) {
-	log.Info().Str("url", url).Msg("Capture initiated for")
 
 	hash := md5.Sum([]byte(url))
 	path := fmt.Sprintf("/tmp/%x.png", hash)

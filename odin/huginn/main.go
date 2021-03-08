@@ -9,6 +9,7 @@ import (
 
 	odin "github.com/2hamed/saas/odin"
 	pb "github.com/2hamed/saas/protobuf"
+	"github.com/2hamed/saas/trace"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -22,14 +23,17 @@ type server struct {
 }
 
 func (s *server) Capture(ctx context.Context, in *pb.QueueRequest) (*pb.QueueResponse, error) {
+	ctx, span := trace.Start(ctx, "Capture")
+	defer span.End()
+
 	uuid := uuid.New()
-	log.Info().Str("url", in.GetUrl()).Str("uuid", uuid.String()).Msg("Received GRPC request")
+	log.Info().Str("trace", trace.FQDN(span)).Str("span_id", span.SpanContext().SpanID.String()).Str("url", in.GetUrl()).Str("uuid", uuid.String()).Msg("Received GRPC request")
 	err := s.q.Enqueue(ctx, odin.CaptureJob{
 		UUID: uuid.String(),
 		URL:  in.GetUrl(),
 	})
 	if err != nil {
-		log.Error().Err(err).Msg("failed pushing job to queue")
+		log.Error().Str("trace", trace.FQDN(span)).Str("span_id", span.SpanContext().SpanID.String()).Err(err).Msg("failed pushing job to queue")
 		return nil, fmt.Errorf("failed pushing job to queue: %w", err)
 	}
 	return &pb.QueueResponse{Uuid: uuid.String()}, nil
@@ -41,6 +45,10 @@ func main() {
 	zerolog.TimestampFieldName = "timestamp"
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 	log.Info().Msg("Starting Huginn...")
+
+	if err := trace.StartTracing(trace.WithName("huginn")); err != nil {
+		log.Fatal().Err(err).Msg("failed to intialize tracing")
+	}
 
 	port := os.Getenv("GRPC_LISTEN_PORT")
 

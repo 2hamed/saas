@@ -53,6 +53,8 @@ spec:
               value: {{ .Values.auth.username | quote }}
             - name: RABBITMQ_PASS
               value: {{ .Values.auth.password | quote }}
+            - name: GOOGLE_CLOUD_PROJECT
+              value: {{ .Values.env.gcp.cloudProjectId }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

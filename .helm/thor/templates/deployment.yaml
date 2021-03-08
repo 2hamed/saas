@@ -44,6 +44,8 @@ spec:
               value: {{ .Values.env.gcp.storageBucket | quote}}
             - name: GCP_SERVICE_ACCOUNT_FILE_PATH
               value: "/gcp/gcloud-config.json"
+            - name: GOOGLE_CLOUD_PROJECT
+              value: {{ .Values.env.gcp.cloudProjectId }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:

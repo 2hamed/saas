@@ -9,6 +9,7 @@ import (
 
 	"cloud.google.com/go/storage"
 	pb "github.com/2hamed/saas/protobuf"
+	"github.com/2hamed/saas/trace"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/option"
@@ -22,6 +23,11 @@ type server struct {
 }
 
 func (s *server) Capture(ctx context.Context, in *pb.CaptureRequest) (*pb.CaptureResponse, error) {
+	ctx, span := trace.Start(ctx, "Capture")
+	defer span.End()
+	b := []byte([]uint8{1, 3, 5, 6, 7, 8})
+	log.Info().Str("trace", trace.FQDN(span)).Str("span_id", span.SpanContext().SpanID.String()).Msg("Capture initiated")
+
 	objectPath, err := s.capture.Save(ctx, in.Url)
 	if err != nil {
 		return nil, err
@@ -34,12 +40,17 @@ func (s *server) Capture(ctx context.Context, in *pb.CaptureRequest) (*pb.Captur
 }
 
 func main() {
+
 	log.Logger = log.Level(zerolog.InfoLevel)
 	zerolog.LevelFieldName = "severity"
 	zerolog.TimestampFieldName = "timestamp"
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 
 	log.Info().Msg("Starting Thor...")
+
+	if err := trace.StartTracing(trace.WithName("thor")); err != nil {
+		log.Fatal().Err(err).Msg("failed to intialize tracing")
+	}
 
 	port := os.Getenv("GRPC_LISTEN_PORT")
 

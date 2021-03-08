@@ -37,7 +37,7 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
-  type: NodePort
+  type: LoadBalancer
   port: 80
 
 ingress:
@@ -81,3 +81,5 @@ affinity: {}
 env:
   httpListenPort: 8080
   queueGrpcAddr: huginn.default.svc:5000
+  gcp:
+    cloudProjectId: cloud-voyage

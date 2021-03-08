@@ -16,3 +16,9 @@ resource "google_storage_bucket" "capture_storage" {
     max_age_seconds = 3600
   }
 }
+
+resource "google_storage_bucket_iam_member" "member" {
+  bucket = google_storage_bucket.capture_storage.name
+  role   = "roles/storage.objectViewer"
+  member = "allUsers"
+}

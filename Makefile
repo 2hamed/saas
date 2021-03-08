@@ -44,10 +44,23 @@ uninstall:
 	helm uninstall $(shell helm ls -q)
 
 upgrade-odin:
-	helm upgrade odin .helm/odin --set rabbitmq.auth.username=rabbit,rabbitmq.auth.password=rabbitpass
+	helm upgrade odin .helm/odin --set rabbitmq.auth.username=rabbit,rabbitmq.auth.password=rabbitpass,rabbitmq.auth.erlangCookie=$(shell kubectl get secret --namespace "default" odin-rabbitmq -o jsonpath="{.data.rabbitmq-erlang-cookie}" | base64 --decode)
 
 upgrade-heimdall:
 	helm upgrade heimdall .helm/heimdall
 
 upgrade-thor:
 	helm upgrade thor .helm/thor
+
+upgrade: upgrade-heimdall upgrade-odin upgrade-thor
+
+redeploy-thor:
+	kubectl rollout restart deployment/thor
+redeploy-huginn:
+	kubectl rollout restart deployment/huginn
+redeploy-muninn:
+	kubectl rollout restart deployment/muninn
+redeploy-heimdall:
+	kubectl rollout restart deployment/heimdall
+
+redeploy: redeploy-heimdall redeploy-muninn redeploy-huginn redeploy-thor

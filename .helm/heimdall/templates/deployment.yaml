@@ -44,6 +44,8 @@ spec:
               value: {{ .Values.env.httpListenPort | quote }}
             - name: QUEUE_GRPC_ADDRESS
               value: {{ .Values.env.queueGrpcAddr | quote }}
+            - name: GOOGLE_CLOUD_PROJECT
+              value: {{ .Values.env.gcp.cloudProjectId }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

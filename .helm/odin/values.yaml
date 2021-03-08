@@ -87,6 +87,8 @@ affinity: {}
 env:
   grpcListenPort: 5000
   rabbitHost: odin-rabbitmq.default.svc
+  gcp:
+    cloudProjectId: cloud-voyage
 
 auth:
   username: rabbit

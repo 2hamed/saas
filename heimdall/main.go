@@ -7,6 +7,7 @@ import (
 	"time"
 
 	pb "github.com/2hamed/saas/protobuf"
+	"github.com/2hamed/saas/trace"
 	"github.com/go-chi/chi"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -19,6 +20,10 @@ func main() {
 	zerolog.TimestampFieldName = "timestamp"
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 	log.Info().Msg("Starting Heimdall...")
+
+	if err := trace.StartTracing(trace.WithName("heimdall")); err != nil {
+		log.Fatal().Err(err).Msg("failed to intialize tracing")
+	}
 
 	listenHostPort := fmt.Sprintf(":%s", os.Getenv("HTTP_LISTEN_PORT"))
 	address := os.Getenv("QUEUE_GRPC_ADDRESS")
@@ -45,6 +50,9 @@ func main() {
 	}
 }
 func serveHome(w http.ResponseWriter, r *http.Request) {
+	_, span := trace.Start(r.Context(), "Home")
+	defer span.End()
+
 	w.WriteHeader(200)
 	w.Write([]byte("Hello! I am Heimdall!"))
 }
