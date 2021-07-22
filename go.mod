@@ -7,9 +7,7 @@ require (
 	cloud.google.com/go/storage v1.13.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v0.16.0
 	github.com/go-chi/chi v1.5.2
-	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/protobuf v1.4.3
-	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.7.3
@@ -18,11 +16,8 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271
 	github.com/stretchr/testify v1.7.0
-	github.com/tidwall/pretty v1.0.0 // indirect
-	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
-	github.com/xdg/stringprep v1.0.0 // indirect
-	go.mongodb.org/mongo-driver v1.1.3
-	go.opencensus.io v0.23.0
+	go.mongodb.org/mongo-driver v1.5.1
+	go.opencensus.io v0.23.0 // indirect
 	go.opentelemetry.io/otel v0.17.0
 	go.opentelemetry.io/otel/sdk v0.17.0
 	go.opentelemetry.io/otel/trace v0.17.0
